@@ -72,7 +72,7 @@ mt_getTibblesInList <- function(modelFilename) {
   list(lsModel=lsModel,
        tbCompartments=tbCompartments,
        tbTransitions=tbTransitions,
-       tbAges=lsModel$Ages,
+       tbAges=lsModel$Age,
        alivepop=alivepop,
        varind=varind,
        traind=traind)

@@ -1,4 +1,4 @@
-getModelInputs <- function(prefix="inputs",suffix="_Diphtheria",scenario="Baseline") {
+getModelInputs <- function(prefix="inputs",suffix="_Rubella",scenario="Baseline") {
   # This functions job is to read all the inputs from the workbook and return them as a list
   # The workbooks filename is constructed from the prefix, scenario, and suffix as below
   # The sheet names are assumed to be as follows:
@@ -25,7 +25,7 @@ getModelInputs <- function(prefix="inputs",suffix="_Diphtheria",scenario="Baseli
     setdiff("contact")
   workbookList <- sheet_names |>
     sapply(function(sheet)readxl::read_excel(fname, sheet = sheet), simplify=F)
-  workbookList$contact <- read_excel(fname, sheet = "contact", col_names = paste0("V", 1:56))
+  workbookList$contact <- read_excel(fname, sheet = "contact", col_names = paste0("V", 1:109))
   
   ## singles
   result <- workbookList$singles %>% pull(value, name=name)

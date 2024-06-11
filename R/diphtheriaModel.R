@@ -1,6 +1,6 @@
 # MASHA code structure - stupid rabbit
-install.packages("remotes")
-remotes::install_github("nick-moffitt/orderlabel")
+#install.packages("remotes")
+#remotes::install_github("nick-moffitt/orderlabel")
 library(readxl)
 source("R/mt_utils.R")
 source("R/utils.R")
@@ -159,30 +159,9 @@ postproc.D  <- function(parameters, out, tran) {
     
     # Add what you want to count here
     postprocVars <- vars(popa,
-                         prev_D,
+                         imune,
                          all_Inc_D,
-                         clin_Inc_D,
-                         clin_Inc100k_D,
-                         treat_Inc_D,
-                         treat_Inc100k_D,
-                         outp_Inc_D,
-                         outp_Inc100k_D,
-                         inp_Inc_D,
-                         inp_Inc100k_D,
-                         deaths_D,
-                         deaths100k_D,
-                         rep_Clin_D,
-                         rep_Clin100k_D,
-                         rep_deaths_D,
-                         rep_deaths100k_D,
-                         doses_1_D,
-                         doses_2_D,
-                         doses_3_D,
-                         doses_b_D,
-                         doses_cb_D,
-                         doses_ab_D,
-                         doses_m_D,
-                         protected_D)
+                         doses_1_D)
     
     postprocVarNames <- postprocVars %>% sapply(rlang::as_name)
     postprocVarList <- lapply(postprocVarNames, function(varName){
@@ -205,11 +184,9 @@ postproc.D  <- function(parameters, out, tran) {
       # 2 - Fill variables with values for each N
       popa <- rowSums(out[,c(varind_D[c(alivepop_D),n])+1])  # Alive population
       postprocVarList$popa[, n]  <- popa
-      postprocVarList$prev_D[, n] <- rowSums(out[, c(varind_D[infCompartments, n])+1]) # Prevalence
-
       postprocVarList$all_Inc_D[, n]  <- rowSums(tran[, unname(traind_D[allincTransitions, n])] / 365)     # All Incidence
       postprocVarList$doses_1_D[, n]  <- rowSums(tran[, traind_D[doses_1Transitions, n]] / 365)     # Doses
-      postprocVarList$protected_D[, n] <- rowSums(out[, c(varind_D[protectCompartments, n])+1]) # Prevalence
+      postprocVarList$imune[, n] <- rowSums(out[, c(varind_D[imuneTransitions, n])+1]) # Prevalence
     }
     # Ignore from here down
     timesteps <- out[, 1, drop = T]
@@ -257,12 +234,11 @@ epiModel.D <- function(t, state, parameters) {
 makeInitialConditionsCode.D <- function(mtMod_D, parameters, coverage_table) {
   chr = as.character
   sy = startyear
-  cov1 <- coverage_table %>% pull(DTPCV1, name=Year)
-  cov2 <- coverage_table %>% pull(DTPCV2, name=Year)
-  cov3 <- coverage_table %>% pull(DTPCV3, name=Year)
+  cov1 <- coverage_table %>% pull(cov1, name=Year)
+  cov2 <- coverage_table %>% pull(cov2, name=Year)
   eff1 <- first(parameters$eff_1_D)
   eff2 <- first(parameters$eff_2_D)
-  eff3 <- first(parameters$eff_3_D)
+
   
   gbdPrev <-  read_excel("data/DataWorkbook.xlsx", sheet = "tbGbdPrev") %>%
     mutate(prev = as.numeric(prev)) %>% 
@@ -272,53 +248,46 @@ makeInitialConditionsCode.D <- function(mtMod_D, parameters, coverage_table) {
   initcond <- as_tibble(expand_grid(compartment=tbCompartments_D$State, age_group=names(pop))) %>%
     mutate(value=0) %>%
     pivot_wider(names_from = 'compartment', values_from=value) %>%
-    mutate(age_yrs=case_when(age_group%in%age_group[1:17] ~ 0, # grouping ages()
-                             age_group%in%age_group[18:29] ~ 1,
-                             age_group==age_group[30] ~ 2,
-                             age_group==age_group[31] ~ 3,
-                             age_group==age_group[32] ~ 4,
-                             age_group==age_group[33] ~ 5,
-                             age_group%in%age_group[34:56] ~ 6),
-           ageId=as.integer(as_factor(age_group))
-           ) %>%
-    select(age_yrs,everything()) %>%
-    group_by(ageId, age_group, age_yrs) %>%
-   # each age group 
-   # Defauts to last TRUE   
-    
-     group_modify(function(.x,.y) {
+    mutate(age_yrs = case_when(
+      age_group %in% age_group[1:6] ~ 0,     # 0-5 months
+      age_group %in% age_group[7:12] ~ 1,    # 6-11 months
+      age_group %in% age_group[13:24] ~ 2,   # 1-2 years
+      age_group %in% age_group[25:36] ~ 3,   # 2-3 years
+      age_group %in% age_group[37:48] ~ 4,   # 3-4 years
+      TRUE ~ 5  # 4 years and above
+    ),
+    ageId = as.integer(as_factor(age_group))) %>%
+    select(age_yrs, everything()) %>%
+    group_by(ageId, age_group, age_yrs)
+  
+  # Modifying initial conditions for each age group
+  initcond <- initcond %>%
+    group_modify(function(.x, .y) {
       with(.y, {
-        .x$D.V_3 <- case_when(age_yrs==0 ~ 0,
-                              age_yrs==6 ~ 0,
-                              TRUE ~ cov3[[chr(sy-age_yrs)]]# age group pertaining to given age 
+        .x$V <- case_when(
+          age_yrs == 1 ~ cov1[[chr(sy - age_yrs)]],     # First dose at 6 months
+          age_yrs == 2 ~ cov2[[chr(sy - age_yrs)]],     # Second dose at 12 months
+          TRUE ~ 0                                      # No vaccination coverage for other ages
         )
-        .x$D.V_2 <- case_when(age_yrs==0 ~ 0,
-                              age_yrs==6 ~ 0,
-                              TRUE ~ (cov2[[chr(sy-age_yrs)]]-cov3[[chr(sy-age_yrs)]])
-        )
-        .x$D.V_1 <- case_when( age_yrs==0 ~ 0,
-                               age_yrs==6 ~ mean(cov1[chr(sy-5:15)]-cov2[chr(sy-5:15)]),
-                               TRUE ~ cov1[[chr(sy-age_yrs)]]-cov2[[chr(sy-age_yrs)]]
-        )
-        .x$D.I_pr <- 0.1*gbdPrev[[as.character(age_group)]]
-        # .x$D.V_mm1 <- 0.5*with(parameters, femProp[ageId]*fertProp[ageId]*covANC)
-        # .x$D.M1 <- 0.5*with(parameters, femProp[ageId]*fertProp[ageId]*covANC)
-        # .x$D.V_mm2 <- 0.5*with(parameters, femProp[ageId]*fertProp[ageId]*covANC)
-        # .x$D.M2 <- 0.5*with(parameters, femProp[ageId]*fertProp[ageId]*covANC)
+        .x$I <- ifelse(age_yrs == 0, 0.0001, 0)          # Initial low incidence for infectious compartment
+        .x$R <- 0                                       # Initial recovered compartment set to 0
+        .x$M <- ifelse(age_yrs == 0, 0.7 * .x$V, 0)     # Assuming 70% maternal immunity for newborns
+        .x$S <- pmax(0, 1 - sum(.x))                    # Susceptible compartment is the remainder
         
-        if (sum(.x)>1) {
-          warning("btw, sum(.x)>1")
-          .x <- .x %>% mutate(across(.fns=function(col){col/sum(.x)}))
-        }
-        .x$D.S <- pmax(0,1-sum(.x))
         .x
       })
-    }) %>% ungroup() %>% select(age_group, starts_with('D.'))
-  #browser()
-  initcond %>%
-    mutate(pop=unname(pop), across(where(is.numeric), .fns = ~.x*pop)) %>%
-    pivot_longer(!c(age_group,pop)) %>%
-    pull(value) %>% unname()
+    }) %>%
+    ungroup() %>%
+    select(age_group, starts_with('M'), starts_with('S'), starts_with('I'), starts_with('R'), starts_with('V'))
+  
+  # Scaling by population size
+  initcond <- initcond %>%
+    mutate(pop = unname(pop), across(where(is.numeric), .fns = ~ .x * pop)) %>%
+    pivot_longer(!c(age_group, pop)) %>%
+    pull(value) %>%
+    unname()
+  
+  return(initcond)
 }
 
 # RUN FUNCTION  ####

@@ -89,11 +89,11 @@ getPopData <- function(tbAges, year=2010) {
     mutate(fiveYearCat=as.integer(pop_age)) %>%
     left_join(dfAge, by="fiveYearCat") %>%
     summarise(popTot=popTot*prop,
-              mortTot=mortTot*prop,
-              mortRate=mortRate,
-              birthRate=birthRate,
-              femProp=femProp,
-              fertProp=fertProp,
+              #mortTot=mortTot*prop,
+              #mortRate=mortRate,
+              #birthRate=birthRate,
+              #femProp=femProp,
+              #fertProp=fertProp,
               fiveYearCat=fiveYearCat,
               .by=age_group) %>%
     mutate(age_group=factor(age_group, levels = levels(dfAge$age_group)))
