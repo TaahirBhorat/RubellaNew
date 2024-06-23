@@ -54,7 +54,7 @@ cppFunction('
   }
 ')
 #### Model start-up definitions ####
-N <- 109   # number of patches (age bands)
+N <- 108   # number of patches (age bands)
 #### Import Data ####
 
 startyear <- 2000 # starting year of simulation 2015-01-01
@@ -98,3 +98,4 @@ getPopData <- function(tbAges, year=2010) {
               .by=age_group) %>%
     mutate(age_group=factor(age_group, levels = levels(dfAge$age_group)))
 }
+

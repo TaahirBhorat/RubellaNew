@@ -7,18 +7,18 @@ source(here::here("R/diphtheriaModel.R"))
 setLogLevel(LEVEL$TRACE)
 # setLogLevel(LEVEL$INFO) #to shush the logging
 
-param_Baseline <- getModelInputs(scenario="Baseline")
+param_Baseline <- getModelInputs(scenario="Rubella")
 
-initialConditions <- makeInitialConditionsCode.D(
-  mtMod_D,
-  parameters = param_Baseline,
-  coverage_table = readxl::read_excel(
-    "data/DataWorkbook.xlsx",
-    sheet = "coverage_table",
-  ) %>% mutate(across(c(DTPCV1, DTPCV2, DTPCV3), as.numeric))
-)
+initialConditions <- read_excel("DataWorkbookRubella.xlsx", sheet = 'init_cond')[-1]
+grp <- read_excel("DataWorkbookRubella.xlsx", sheet = 'age_ref')[-1]
 
+# Rename the column in the grp dataframe to age_group
+colnames(grp)[1] <- "age_group"
+
+# Assign the age_group column to the initialConditions dataframe
+#initialConditions$age_group <- grp$age_group
 tictoc::tic("Running Baseline")
+initialConditions = as.matrix(initialConditions)
 mo_baseline <- run_model.D(param_Baseline, initialConditions, timesteps)
 tictoc::toc()
 

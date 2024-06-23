@@ -76,7 +76,7 @@ disrates.D <- function(x, parameters, t) {
     
     #parameters
     infectious_D <- (I)/D.pop
-    lambda_D = 1*ptrans*as.vector(contact%*%infectious_D)
+    lambda = 1*ptrans*as.vector(contact%*%infectious_D)
     
     
     
@@ -105,12 +105,10 @@ disrates.D <- function(x, parameters, t) {
     
     #TO DO:  Jared to edit output to shinyapps to add cov1yr, cov2yr etc as a matrix  with colnames of year. 
     # then replace code below with 
-    cov1<-cov1yr[,tic]
-    cov2<-cov2yr[,tic]
-    cov3<-cov3yr[,tic]
-    covb<-covbyr[,tic]
-    covcb<-covcbyr[,tic]
-    covab<-covabyr[,tic]
+    #cov1<-cov1yr[,tic]
+    #cov2<-cov2yr[,tic]
+    #cov3<-cov3yr[,tic]
+
     
     #browser()
     
@@ -120,27 +118,31 @@ disrates.D <- function(x, parameters, t) {
     omega_D<-365.25/3 # upper bound of parameter
     phi_D <- 365.25/5 #range is 2 (0-33) for Rohingya response. should be higher in non-emergency setting
 
+# Vaccination from M, R as well
     
  # if (tic>2025) browser()
     tranrate <- array(c(
-      births,  # Births
+      (1-mprop)*births,  # Births no-maternal-immunity
+      mprop*births,  # Births Maternal Immunity
       d*M,  # Loss of maternal immunity
-      v[,tic]*S,  # Vaccination 
-      lambda*(1-v[,tic])*S,  # infection
-      gamma*I,  # natural recovery
-      (1-d)*(1-s[,tic])*u*M,  # ageing
-      (1-s[,tic])*(1-lamda)*(1-v[,tic])*u*S,  # ageing
-      (1-s[,tic])*u*V,  # ageing
-      (1-s[,tic])*d*u*(1-v[,tic])*M,  # ageing maternal immunity loss
-      (1-s[,tic])*lambda*u*(1-v)*S,  # ageing infection
-      (1-s[,tic])*u*I,  # ageing natural recovery
+      (1-s[,tic])*v[,tic]*u*S,  # ageing, vaccination from succeptible
+      lambda*S,  # infection
+      gamm*I,  # natural recovery
+      (1-v[,tic])*(1-s[,tic])*u*M,  # ageing, no vaccination from maternal immune
+      (1-s[,tic])*(1-v[,tic])*u*S,  # ageing, no vaccination from succeptible
+      (1-s[,tic])*u*V,  # ageing in vaccination compartment
+      (1-s[,tic])*u*(1-v[,tic])*M,  # ageing maternal immunity loss
+      (1-s[,tic])*v[,tic]*u*M,  # ageing, vaccination from maternal immune
+      (1-s[,tic])*v[,tic]*u*R,  # Recovered Vaccination
       s[,tic]*M,  # natural death
       s[,tic]*S,  # natural death
       s[,tic]*I,  # natural death
       s[,tic]*R,  # natural death
-      s[,tic]*V  # natural death
-    ), dim=c(N, 16))
+      s[,tic]*V,  # natural death
+      (1-v[,tic])*(1-s[,tic])*u*R  # Recovered ageing
+    ), dim=c(N, 18))
     tranrate <- c(t(tranrate))
+  
     # T2 <- Sys.time()
     return(tranrate)
   })
@@ -229,22 +231,28 @@ epiModel.D <- function(t, state, parameters) {
 # M starts 0
 # V at 0
 # Seroprev for each month 
-
+###Only really need to set initial age conditions for S,I and R
+### Take 2018 positives as my I divided by age groups
+#### Look at number of cases by age group take the positives times by populations and put in R and S should the opposite(the negatives)
+#### Check no vac, no disease do they age correctly!  
 
 makeInitialConditionsCode.D <- function(mtMod_D, parameters, coverage_table) {
+  parameters =param_Baseline
   chr = as.character
   sy = startyear
+  coverage_table = read_xlsx(
+    "DataWorkbookRubella.xlsx",) %>% mutate(across(c(cov1, cov2), as.numeric))
   cov1 <- coverage_table %>% pull(cov1, name=Year)
   cov2 <- coverage_table %>% pull(cov2, name=Year)
   eff1 <- first(parameters$eff_1_D)
   eff2 <- first(parameters$eff_2_D)
 
-  
   gbdPrev <-  read_excel("data/DataWorkbook.xlsx", sheet = "tbGbdPrev") %>%
     mutate(prev = as.numeric(prev)) %>% 
     pull(prev, name=age_group)
   LOG('makeInitialConditionsCode.D(sy={sy}})')
   pop <- getPopData(mtMod_D$tbAges, year=sy) %>% pull(popTot, name=age_group)
+  pop = na.omit(pop)
   initcond <- as_tibble(expand_grid(compartment=tbCompartments_D$State, age_group=names(pop))) %>%
     mutate(value=0) %>%
     pivot_wider(names_from = 'compartment', values_from=value) %>%
@@ -328,21 +336,7 @@ run_model.D <- function(parameters, initialConditions, timesteps,
                                   parameters=parameters,
                                   t=timesteps[[ti]]))
   }
-  # Could be useful to have a tibble here?
-  # tbTranRates <- lapply(seq_along(timesteps), function(ti) {
-  #     compartmentValues <- outoderun[ti,1+seq(N*nrow(tbCompartments_D))]
-  #     transitionRates <- disrates.D(x=compartmentValues,
-  #                                   parameters=parameters,
-  #                                   t=0)
-  #     matTransitionRates <- matrix(transitionRates, nrow=nrow(tbTransitions_D), ncol=N, byrow = F)
-  #     matTransitionRates %>%
-  #       as_tibble() %>%
-  #       rowid_to_column('transitionIndex') %>%
-  #       pivot_longer(!transitionIndex, names_to = 'age_group') %>% 
-  # mutate(time=timesteps[[ti]])
-  #     }) %>%
-  #   bind_rows()
-  #Compute outputs
+
   LOG("Postprocessing Diphtheria", LEVEL$TRACE)
   ppout <- postproc.D(parameters, outoderun, tranoderun)
   
@@ -556,3 +550,4 @@ pltPostProc_yr.D  <- function(mo, var='inc_pred') {
     facet_wrap(vars(as_factor(age_group)),scales = 'free_y') +
     labs(title=as.character(glue::glue("Diphtheria {var} plot per age group")))
 }
+
