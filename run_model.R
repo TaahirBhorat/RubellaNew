@@ -1,7 +1,7 @@
 source(here::here("R/utils.R"))
 LOG <- makeLogger()
 source(here::here("R/model_setup.R"))
-source(here::here("R/diphtheriaModel.R"))
+source(here::here("R/rubellaModel.R"))
 
 #### Run the model ####
 setLogLevel(LEVEL$TRACE)
@@ -19,11 +19,24 @@ colnames(grp)[1] <- "age_group"
 #initialConditions$age_group <- grp$age_group
 tictoc::tic("Running Baseline")
 initialConditions = as.matrix(initialConditions)
+initialConditions <- as.vector(t(initialConditions))
 mo_baseline <- run_model.D(param_Baseline, initialConditions, timesteps)
 tictoc::toc()
 
 #### Plots ####
-pltPostProc_yr.D(mo_baseline$moPostprocessing[[1]], var = "clin_Inc_D")
+mop = mo_baseline$moPostprocessing[[1]] |>
+  mutate(age_group=as_factor(age_group))
+mop%>%esquisse::esquisser()
+### Checking Immune compartments:
+mop |>
+  dplyr::filter(age_group!="All", year>=2022, variable=="imune") |>
+ggplot() +
+  aes(x = year, y = value, colour = age_group, group = age_group) +
+  geom_point() +
+  scale_color_hue(direction = 1) +
+  theme_minimal() +
+  facet_wrap(vars(variable), scales = "free_y")
+pltPostProc_yr.D(mo_baseline$moPostprocessing[[1]], var = "all_Inc_D")
 
 #### Scenario example ####
 param_Scen1 <- getModelInputs(scenario="Scenario")
