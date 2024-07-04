@@ -169,7 +169,7 @@ postproc.D  <- function(parameters, out, tran) {
     
     # Add what you want to count here
     postprocVars <- vars(popa,
-                         imune,
+                         imune_D,
                          all_Inc_D,
                          doses_1_D)
     
@@ -183,9 +183,11 @@ postproc.D  <- function(parameters, out, tran) {
     #Count the things
     #Grouping Transitions for use for counting 
     allincTransitions <- tbTransitions_D %>% filter(To%in%c('I[n]')) %>% pull(id)
-    imuneCompartments <- c("M","V","R")
-    browser()
+    imuneCompartments <- c('M',"V",'R')
+
     doses_1Transitions <- tbTransitions_D %>% filter(To=='V[nxt]') %>% pull(id)
+
+
 
     
     # Here do the actual age stratified counting 
@@ -195,7 +197,7 @@ postproc.D  <- function(parameters, out, tran) {
       # 2 - Fill variables with values for each N
       popa <- rowSums(out[,c(varind_D[c(alivepop_D),n])+1])  # Alive population
       postprocVarList$popa[, n]  <- popa
-      postprocVarList$imune[, n] <- rowSums(out[, c(varind_D[imuneCompartments, n])+1])
+      postprocVarList$imune_D[, n] <- rowSums(out[, c(varind_D[imuneCompartments, n])+1])
       postprocVarList$all_Inc_D[, n]  <- (tran[, unname(traind_D[allincTransitions, n])] / 365)     # All Incidence
       postprocVarList$doses_1_D[, n]  <- rowSums(tran[, traind_D[doses_1Transitions, n]] / 365)     # Doses
        # Prevalence
@@ -246,67 +248,7 @@ epiModel.D <- function(t, state, parameters) {
 #### Look at number of cases by age group take the positives times by populations and put in R and S should the opposite(the negatives)
 #### Check no vac, no disease do they age correctly!  
 
-makeInitialConditionsCode.D <- function(mtMod_D, parameters, coverage_table) {
-  parameters =param_Baseline
-  chr = as.character
-  sy = startyear
-  coverage_table = read_xlsx(
-    "DataWorkbookRubella.xlsx",) %>% mutate(across(c(cov1, cov2), as.numeric))
-  cov1 <- coverage_table %>% pull(cov1, name=Year)
-  cov2 <- coverage_table %>% pull(cov2, name=Year)
-  eff1 <- first(parameters$eff_1_D)
-  eff2 <- first(parameters$eff_2_D)
 
-  gbdPrev <-  read_excel("data/DataWorkbook.xlsx", sheet = "tbGbdPrev") %>%
-    mutate(prev = as.numeric(prev)) %>% 
-    pull(prev, name=age_group)
-  LOG('makeInitialConditionsCode.D(sy={sy}})')
-  pop <- getPopData(mtMod_D$tbAges, year=sy) %>% pull(popTot, name=age_group)
-  pop = na.omit(pop)
-  initcond <- as_tibble(expand_grid(compartment=tbCompartments_D$State, age_group=names(pop))) %>%
-    mutate(value=0) %>%
-    pivot_wider(names_from = 'compartment', values_from=value) %>%
-    mutate(age_yrs = case_when(
-      age_group %in% age_group[1:6] ~ 0,     # 0-5 months
-      age_group %in% age_group[7:12] ~ 1,    # 6-11 months
-      age_group %in% age_group[13:24] ~ 2,   # 1-2 years
-      age_group %in% age_group[25:36] ~ 3,   # 2-3 years
-      age_group %in% age_group[37:48] ~ 4,   # 3-4 years
-      TRUE ~ 5  # 4 years and above
-    ),
-    ageId = as.integer(as_factor(age_group))) %>%
-    select(age_yrs, everything()) %>%
-    group_by(ageId, age_group, age_yrs)
-  
-  # Modifying initial conditions for each age group
-  initcond <- initcond %>%
-    group_modify(function(.x, .y) {
-      with(.y, {
-        .x$V <- case_when(
-          age_yrs == 1 ~ cov1[[chr(sy - age_yrs)]],     # First dose at 6 months
-          age_yrs == 2 ~ cov2[[chr(sy - age_yrs)]],     # Second dose at 12 months
-          TRUE ~ 0                                      # No vaccination coverage for other ages
-        )
-        .x$I <- ifelse(age_yrs == 0, 0.0001, 0)          # Initial low incidence for infectious compartment
-        .x$R <- 0                                       # Initial recovered compartment set to 0
-        .x$M <- ifelse(age_yrs == 0, 0.7 * .x$V, 0)     # Assuming 70% maternal immunity for newborns
-        .x$S <- pmax(0, 1 - sum(.x))                    # Susceptible compartment is the remainder
-        
-        .x
-      })
-    }) %>%
-    ungroup() %>%
-    select(age_group, starts_with('M'), starts_with('S'), starts_with('I'), starts_with('R'), starts_with('V'))
-  
-  # Scaling by population size
-  initcond <- initcond %>%
-    mutate(pop = unname(pop), across(where(is.numeric), .fns = ~ .x * pop)) %>%
-    pivot_longer(!c(age_group, pop)) %>%
-    pull(value) %>%
-    unname()
-  
-  return(initcond)
-}
 
 # RUN FUNCTION  ####
 run_model.D <- function(parameters, initialConditions, timesteps,
@@ -349,7 +291,7 @@ run_model.D <- function(parameters, initialConditions, timesteps,
 
   LOG("Postprocessing Diphtheria", LEVEL$TRACE)
   ppout <- postproc.D(parameters, outoderun, tranoderun)
-  browser()
+
   ppout|>
     filter(age_group == first(age_group))|>
     ggplot() +
@@ -366,13 +308,7 @@ run_model.D <- function(parameters, initialConditions, timesteps,
     mutate(disease="Diphtheria",
            unit = "Daily") #Daily outputs by age group
 
-  # DISoutage2 <- DISoutage %>% #Prevalence proportion calcs
-  #   postProcSummarize.D()
-  
-  # DISoutall<-DISoutage %>%  #Daily outputs for all ages
-  #   postProcSummarizeAges.D()
-  
-  # DISout<-bind_rows(DISoutage, DISoutage2, DISoutall) #Daily output
+
   
   # This object takes a second or two but is useful in saving time in further calculations
   DISoutageVT <- ppout %>%
@@ -389,7 +325,7 @@ run_model.D <- function(parameters, initialConditions, timesteps,
   DISoutallyr <- postProcSummarizeAgesYear.D(DISoutageVT)  # Annual outputs for all ages
   
   DISoutageyr <- postProcSummarizeYear.D(DISoutageVT)  # Annual outputs by age group
-  browser()
+
   DISoutyr <- bind_rows(DISoutageyr, DISoutallyr) %>% 
     mutate(disease="Diphtheria",
            unit = "Annual") %>% 
