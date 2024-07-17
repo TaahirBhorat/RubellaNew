@@ -123,9 +123,9 @@ disrates.D <- function(x, parameters, t) {
 # Vaccination from M, R as well
     bi <- rep_along(S, 0)
     bi[1] <- births[[tic]]
-  # if (tic =='2023'){
-  #   browser()
-  # } 
+    #if (tic =='2003'){
+     #browser()
+   #} 
     tranrate <- array(c(
       (1-mprop)*bi,  # Births no-maternal-immunity
       mprop*bi,  # Births Maternal Immunity
@@ -171,7 +171,9 @@ postproc.D  <- function(parameters, out, tran) {
     postprocVars <- vars(popa,
                          imune_D,
                          all_Inc_D,
-                         doses_1_D)
+                         doses_1_D,
+                         deaths_D,
+                         births_D)
     
     postprocVarNames <- postprocVars %>% sapply(rlang::as_name)
     postprocVarList <- lapply(postprocVarNames, function(varName){
@@ -186,6 +188,11 @@ postproc.D  <- function(parameters, out, tran) {
     imuneCompartments <- c('M',"V",'R')
 
     doses_1Transitions <- tbTransitions_D %>% filter(To=='V[nxt]') %>% pull(id)
+    
+    death_transitions = tbTransitions_D %>% filter(To=='NullS[n]') %>% pull(id)
+    
+    birth_transitions <- c(1,2)
+
 
 
 
@@ -199,7 +206,9 @@ postproc.D  <- function(parameters, out, tran) {
       postprocVarList$popa[, n]  <- popa
       postprocVarList$imune_D[, n] <- rowSums(out[, c(varind_D[imuneCompartments, n])+1])
       postprocVarList$all_Inc_D[, n]  <- (tran[, unname(traind_D[allincTransitions, n])] / 365)     # All Incidence
-      postprocVarList$doses_1_D[, n]  <- rowSums(tran[, traind_D[doses_1Transitions, n]] / 365)     # Doses
+      postprocVarList$doses_1_D[, n]  <- rowSums(tran[, traind_D[doses_1Transitions, n]] / 365)
+      postprocVarList$deaths_D[, n]  <- rowSums(tran[, traind_D[death_transitions, n]] / 365)# deaths
+      postprocVarList$births_D[, n]  <- rowSums(tran[, traind_D[birth_transitions, n]] / 365)#births
        # Prevalence
     }
     # Ignore from here down
@@ -436,7 +445,7 @@ postProcSummarizeAgesYear.D <- function(DISoutageVT) {
     transmute(year=year,
               variable=str_replace(variable, '_D$', '_prop_D'),
               value = value)
-  
+
   sum4yr = popyr %>%
     transmute(year, variable='pop_D', value=pop)
   
