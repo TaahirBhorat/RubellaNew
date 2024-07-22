@@ -129,8 +129,8 @@ ggplot() +
   scale_color_manual(name = "Population Type", values = c("Modeled Population" = "blue", "True Population" = "red")) +
   theme_minimal()
 
-###### BIRTHS PLOT######
-modeled_births <- c(
+###### Total Births  over time############################################################################################################
+true_births <- c(
   969828, 963390, 954574, 984308, 1031997, 1074006, 1111171, 1131070, 1217792, 
   1158903, 1152671, 1167985, 1187329, 1194069, 1204040, 1183143, 1151026, 
   1169583, 1212008, 1235776, 1194619, 1176955, 1176955, 1176955, 1176955, 
@@ -138,33 +138,33 @@ modeled_births <- c(
 )
 
 # Prepare a data frame for modeled births
-modeled_births_df <- data.frame(
-  year = 2000:2030,  # Assuming the years are from 1990 to 2020
-  value = modeled_births,
-  source = "Modeled Births"
+true_births_df <- data.frame(
+  year = 2000:2030,  
+  value = true_births,
+  source = "True Births"
 )
 
 # Filter and prepare the Births data from mop
 Births <- mop %>% 
   filter(variable == 'births_D', value > 0) %>%
-  mutate(source = "mop Births") %>%
+  mutate(source = "Model Births") %>%
   select(year, value, source)
 
 # Combine both datasets
-combined_births <- bind_rows(modeled_births_df, Births)
+combined_births <- bind_rows(true_births_df, Births)
 
 # Plot both Modeled Births(data) vs mop Births(Model)
 ggplot(combined_births, aes(x = year, y = value, color = source, group = source)) +
   geom_line() +
   geom_point() +
-  labs(title = "Modeled Births vs. mop Births Over Time",
+  labs(title = "True Births vs. Model Births Over Time",
        x = "Year", y = "Births") +
   theme_minimal() +
-  scale_color_manual(values = c("Modeled Births" = "blue", "mop Births" = "red"))
+  scale_color_manual(values = c("True Births" = "blue", "Model Births" = "red"))
 
 
 
-######DEATH PLOTS######
+######DEATH PLOTS##############################################################################
 Deaths <- mop %>% 
   filter(variable == 'deaths_D') %>%
   mutate(source = "mop Deaths") %>%
@@ -193,7 +193,7 @@ age_groups <- c(
 )
 
 
-
+#### Overall true vs Model Deaths######################################################################################################
 model_deaths = Deaths %>% filter(age_group =="All") %>% select(c(year, value))
 colnames(model_deaths) = c('year', 'model_deaths')
 true_deaths <- c(
@@ -204,7 +204,7 @@ true_deaths <- c(
   554633.2026, 561906.1909, 569705.2916
 )
 model_deaths$true_deaths = true_deaths
-model_deaths = model_deaths %>% filter(year<2024)
+model_deaths = model_deaths %>% filter(year)
 # Plot the data using ggplot2
 ggplot(model_deaths, aes(x = year)) +
   geom_line(aes(y = model_deaths, color = "Model Deaths"), size = 1) +
@@ -214,7 +214,7 @@ ggplot(model_deaths, aes(x = year)) +
        y = "Number of Deaths",
        color = "Legend") +
   theme_minimal()
-
+######## Fat Age Group Death: Model vs True###################################################################################
 # Manually map these into larger age groups
 mapped_age_groups <- c(
   rep("0-1 year", 12),
@@ -258,9 +258,6 @@ result <- data.frame(
 print(result)
 
 
-
-
-
 model_deaths_age = Deaths %>% filter(age_group !="All")
 model_deaths_age$fat_age = rep(mapped_age_groups,31)
 summarized_data <- model_deaths_age %>%
@@ -268,10 +265,7 @@ summarized_data <- model_deaths_age %>%
   summarize(total_value = sum(value))
 
 
-# Read the Excel file
-mortality_data <- read_excel("data/mortality_rates.xlsx")
-
-
+# Read the true deaths
 true_deaths <- read_excel("data/mortality_rates.xlsx", sheet = "totdeaths")
 print(head(true_deaths))
 

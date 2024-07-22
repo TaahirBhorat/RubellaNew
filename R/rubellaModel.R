@@ -178,10 +178,10 @@ postproc.D  <- function(parameters, out, tran) {
       popa <- rowSums(out[,c(varind_D[c(alivepop_D),n])+1])  # Alive population
       postprocVarList$popa[, n]  <- popa
       postprocVarList$imune_D[, n] <- rowSums(out[, c(varind_D[imuneCompartments, n])+1])
-      postprocVarList$all_Inc_D[, n]  <- (tran[, unname(traind_D[allincTransitions, n])] / 365)     # All Incidence
-      postprocVarList$doses_1_D[, n]  <- rowSums(tran[, traind_D[doses_1Transitions, n]] / 365)
-      postprocVarList$deaths_D[, n]  <- rowSums(tran[, traind_D[death_transitions, n]] / 365)# deaths
-      postprocVarList$births_D[, n]  <- rowSums(tran[, traind_D[birth_transitions, n]] / 365)#births
+      postprocVarList$all_Inc_D[, n]  <- (tran[, unname(traind_D[allincTransitions, n])] / 365.25)     # All Incidence
+      postprocVarList$doses_1_D[, n]  <- rowSums(tran[, traind_D[doses_1Transitions, n]] / 365.25)
+      postprocVarList$deaths_D[, n]  <- rowSums(tran[, traind_D[death_transitions, n]] / 365.25)# deaths
+      postprocVarList$births_D[, n]  <- rowSums(tran[, traind_D[birth_transitions, n]] / 365.25)#births
        # Prevalence
     }
     # Ignore from here down
