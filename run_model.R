@@ -9,8 +9,8 @@ setLogLevel(LEVEL$TRACE)
 
 param_Baseline <- getModelInputs(scenario="Rubella")
 
-initialConditions <- read_excel("DataWorkbookRubella.xlsx", sheet = 'init_cond')[-1]
-grp <- read_excel("DataWorkbookRubella.xlsx", sheet = 'age_ref')[-1]
+initialConditions <- read_excel("parameters/DataWorkbookRubella.xlsx", sheet = 'init_cond')[-1]
+grp <- read_excel("parameters/DataWorkbookRubella.xlsx", sheet = 'age_ref')[-1]
 
 # Rename the column in the grp dataframe to age_group
 colnames(grp)[1] <- "age_group"
@@ -20,3 +20,4 @@ initialConditions = as.matrix(initialConditions)
 initialConditions <- as.vector(t(initialConditions))
 mo_baseline <- run_model.D(param_Baseline, initialConditions, timesteps)
 tictoc::toc()
+

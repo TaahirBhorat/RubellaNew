@@ -1,4 +1,4 @@
-getModelInputs <- function(prefix="inputs_",suffix="Baseline",scenario="Rubella") {
+getModelInputs <- function(prefix="parameters/inputs_",suffix="Baseline",scenario="Rubella") {
   # This functions job is to read all the inputs from the workbook and return them as a list
   # The workbooks filename is constructed from the prefix, scenario, and suffix as below
   # The sheet names are assumed to be as follows:

@@ -65,37 +65,37 @@ timesteps <- startyear+seq(0, tyears, dtout) # time vector
 
 LOG('Prepping data')
 
-getPopData <- function(tbAges, year=2010) {
-  # This function is only used in makeInitialConditionsCode.D
-  dfAge <- tbAges %>% 
-    mutate(age_group=as_factor(agecat)) %>% 
-    mutate(across(!c(agecat, age_group), as.numeric))
-  tbUNRaw = read_excel("data/DataWorkbook.xlsx", sheet = "tbUNData") %>%
-    mutate(across(!c(pop_age), as.numeric)) %>%
-    mutate(pop_age =as_factor(pop_age)) 
-  # Find the nearest year for which we have population data
-  getPopTotColName = function(tbUNRaw, year) {
-    valid_pop_years = str_extract(colnames(tbUNRaw),'popTot\\d{4}') %>% 
-      Filter(function(x)!is.na(x),.) %>% 
-      parse_number()
-    popTotYearIndex = which.min(abs(valid_pop_years-year))
-    popTotYear = valid_pop_years[popTotYearIndex]
-    paste0('popTot',popTotYear)
-  }
-
-  LOG('overwriting tbUNRaw$popTot = tbUNRaw[[{getPopTotColName(tbUNRaw, year=year)}]]')
-  tbUNRaw$popTot = tbUNRaw[[getPopTotColName(tbUNRaw, year=year)]]
-  tbUNRaw %>% 
-    mutate(fiveYearCat=as.integer(pop_age)) %>%
-    left_join(dfAge, by="fiveYearCat") %>%
-    summarise(popTot=popTot*prop,
-              #mortTot=mortTot*prop,
-              #mortRate=mortRate,
-              #birthRate=birthRate,
-              #femProp=femProp,
-              #fertProp=fertProp,
-              fiveYearCat=fiveYearCat,
-              .by=age_group) %>%
-    mutate(age_group=factor(age_group, levels = levels(dfAge$age_group)))
-}
+# getPopData <- function(tbAges, year=2010) {
+#   # This function is only used in makeInitialConditionsCode.D
+#   dfAge <- tbAges %>% 
+#     mutate(age_group=as_factor(agecat)) %>% 
+#     mutate(across(!c(agecat, age_group), as.numeric))
+#   tbUNRaw = read_excel("data/DataWorkbook.xlsx", sheet = "tbUNData") %>%
+#     mutate(across(!c(pop_age), as.numeric)) %>%
+#     mutate(pop_age =as_factor(pop_age)) 
+#   # Find the nearest year for which we have population data
+#   getPopTotColName = function(tbUNRaw, year) {
+#     valid_pop_years = str_extract(colnames(tbUNRaw),'popTot\\d{4}') %>% 
+#       Filter(function(x)!is.na(x),.) %>% 
+#       parse_number()
+#     popTotYearIndex = which.min(abs(valid_pop_years-year))
+#     popTotYear = valid_pop_years[popTotYearIndex]
+#     paste0('popTot',popTotYear)
+#   }
+# 
+#   LOG('overwriting tbUNRaw$popTot = tbUNRaw[[{getPopTotColName(tbUNRaw, year=year)}]]')
+#   tbUNRaw$popTot = tbUNRaw[[getPopTotColName(tbUNRaw, year=year)]]
+#   tbUNRaw %>% 
+#     mutate(fiveYearCat=as.integer(pop_age)) %>%
+#     left_join(dfAge, by="fiveYearCat") %>%
+#     summarise(popTot=popTot*prop,
+#               #mortTot=mortTot*prop,
+#               #mortRate=mortRate,
+#               #birthRate=birthRate,
+#               #femProp=femProp,
+#               #fertProp=fertProp,
+#               fiveYearCat=fiveYearCat,
+#               .by=age_group) %>%
+#     mutate(age_group=factor(age_group, levels = levels(dfAge$age_group)))
+# }
 

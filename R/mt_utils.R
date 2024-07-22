@@ -46,7 +46,7 @@ mt_makeTransitionCreationCode <- function(mtModel, modelLetter, indent=8, toClip
   result
 }
 
-modelFilename <- 'RubellaModel.xlsx'
+modelFilename <- 'modelStructure/RubellaModel.xlsx'
 
 mt_getTibblesInList <- function(modelFilename) {
   lsModel <- read_excel_allsheets(modelFilename, tibble=T)

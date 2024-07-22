@@ -1,5 +1,5 @@
 # function to read in all sheets in a workbook
-filename <- 'RubellaModel.xlsx'
+filename <- 'modelStructure/RubellaModel.xlsx'
 read_excel_allsheets <- function(filename, tibble = FALSE) {
   
   sheets <- readxl::excel_sheets(filename)

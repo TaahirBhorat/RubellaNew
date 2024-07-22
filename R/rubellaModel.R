@@ -7,7 +7,7 @@ source("R/utils.R")
 LOG = makeLogger()
 source("R/model_setup.R")
 library(tidyverse)
-modelFilename <- 'RubellaModel.xlsx'
+modelFilename <- 'modelStructure/RubellaModel.xlsx'
 #### Ensure bigX exists #### 
 # mt_updateBigX(modelLetter=modelLetter,
 #               overwrite = T)
@@ -56,7 +56,7 @@ for (n in 1:N) {
 
 
 
-# ************************************************************************************* # #YES
+# ************************************************************************************* # 
 #### Base functions ####
 
 # ************************************************************************************* #
@@ -83,20 +83,7 @@ disrates.D <- function(x, parameters, t) {
     
     
     
-    
-    #TO DO: Remove when model is fully verified
-    #Debugging
-    #Vaccine start conditions set to 0
-    #cov[,tic]<-rep(0, N)
-    # mov_D[,tic]<-1
-    #mrate=0
-    #totbirths <- deathprop <- rep(0,N)
-    
-    #lambda_D<-rep(0, N)
-    #tau_vmm_D[tic]<-0
-    #tau_mi_D[tic]<-tau_1_D[tic]<-tau_2_D[tic]<-tau_3_D[tic]<-tau_b_D[tic]<-tau_cb_D[tic]<-tau_ab_D[tic]<-tau_vmm_D[tic]<-0
-    #agerate<-rep(0, N)
-    
+
     
     #### TO MAKE RATES CODE: #
     #mt_makeTransitionRatesCode(mtMod_D) %>% cat
@@ -106,45 +93,31 @@ disrates.D <- function(x, parameters, t) {
     # T1 <- Sys.time()
     # RATES (PASTED) ####
     
-    #TO DO:  Jared to edit output to shinyapps to add cov1yr, cov2yr etc as a matrix  with colnames of year. 
-    # then replace code below with 
-    #cov1<-cov1yr[,tic]
-    #cov2<-cov2yr[,tic]
-    #cov3<-cov3yr[,tic]
-
-    
-    
-
-    
-    #delta_D<-365.25/3.5 #NICD https://www.nicd.ac.za/wp-content/uploads/2017/03/NICD-guidelines_diphtheria_v3_28-May-2018.pdf
-    #omega_D<-365.25/3 # upper bound of parameter
-    #phi_D <- 365.25/5 #range is 2 (0-33) for Rohingya response. should be higher in non-emergency setting
-
-# Vaccination from M, R as well
+# making births work across ages
     bi <- rep_along(S, 0)
     bi[1] <- births[[tic]]
     #if (tic =='2003'){
      #browser()
    #} 
     tranrate <- array(c(
-      (1-mprop)*bi,  # Births no-maternal-immunity
-      mprop*bi,  # Births Maternal Immunity
+      (1-mprop)*births,  # Births no-maternal-immunity
+      mprop*births,  # Births Maternal Immunity
       d*M,  # Loss of maternal immunity
-      (1-s[,tic])*v[,tic]*u*S,  # ageing, vaccination from succeptible
+      v[,tic]*u*S,  # ageing, vaccination from susceptible
       lambda*S,  # infection
       gamm*I,  # natural recovery
-      (1-v[,tic])*(1-s[,tic])*u*M,  # ageing, no vaccination from maternal immune
-      (1-s[,tic])*(1-v[,tic])*u*S,  # ageing, no vaccination from succeptible
-      (1-s[,tic])*u*V,  # ageing in vaccination compartment
-      (1-s[,tic])*u*(1-v[,tic])*M,  # ageing maternal immunity loss
-      (1-s[,tic])*v[,tic]*u*M,  # ageing, vaccination from maternal immune
-      (1-s[,tic])*v[,tic]*u*R,  # Recovered Vaccination
+      (1-v[,tic])*u*M,  # ageing, no vaccination from maternal immune
+      (1-v[,tic])*u*S,  # ageing, no vaccination from susceptible
+      u*V,  # ageing in vaccination compartment
+      v[,tic]*u*M,  # ageing, vaccination from maternal immune
+      u*I,  # ageing, no vaccination from maternal immune
+      v[,tic]*u*R,  # Recovered Vaccination
       s[,tic]*M,  # natural death
       s[,tic]*S,  # natural death
       s[,tic]*I,  # natural death
       s[,tic]*R,  # natural death
       s[,tic]*V,  # natural death
-      (1-v[,tic])*(1-s[,tic])*u*R  # Recovered ageing
+      (1-v[,tic])*u*R  # Recovered ageing
     ), dim=c(N, 18))
     tranrate <- c(t(tranrate))
     #browser()
@@ -246,17 +219,6 @@ epiModel.D <- function(t, state, parameters) {
 
   list(c(dZ))
 }
-
-#Seroprevalence: Use data for warm up period
-#Make calibration data for seroprevalence.
-# M starts 0
-# V at 0
-# Seroprev for each month 
-###Only really need to set initial age conditions for S,I and R
-### Take 2018 positives as my I divided by age groups
-#### Look at number of cases by age group take the positives times by populations and put in R and S should the opposite(the negatives)
-#### Check no vac, no disease do they age correctly!  
-
 
 
 # RUN FUNCTION  ####
