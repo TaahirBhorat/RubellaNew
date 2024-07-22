@@ -15,7 +15,7 @@ mop%>%esquisse::esquisser()
 
 ############  Death Compartments Plots (age stratified)#####################################################################
 mop%>%
-  filter(variable %in% "deaths_D" & year< 2005) %>%
+  filter(variable %in% "deaths_D") %>%
   ggplot() +
   aes(
     x = year,
@@ -166,7 +166,7 @@ ggplot(combined_births, aes(x = year, y = value, color = source, group = source)
 
 ######DEATH PLOTS######
 Deaths <- mop %>% 
-  filter(variable == 'deaths_D',year<2028) %>%
+  filter(variable == 'deaths_D') %>%
   mutate(source = "mop Deaths") %>%
   select(year, value, source, age_group)
 
@@ -301,6 +301,8 @@ plot_list <- merged_data %>%
 for (p in plot_list$plot) {
   print(p)
 }
+
+
 
 
 

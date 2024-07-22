@@ -100,14 +100,14 @@ disrates.D <- function(x, parameters, t) {
      #browser()
    #} 
     tranrate <- array(c(
-      (1-mprop)*births,  # Births no-maternal-immunity
-      mprop*births,  # Births Maternal Immunity
+      (1-mprop)*bi,  # Births no-maternal-immunity
+      mprop*bi,  # Births Maternal Immunity
       d*M,  # Loss of maternal immunity
-      v[,tic]*u*S,  # ageing, vaccination from susceptible
+      v[,tic]*u*S,  # ageing, vaccination from succeptible
       lambda*S,  # infection
       gamm*I,  # natural recovery
       (1-v[,tic])*u*M,  # ageing, no vaccination from maternal immune
-      (1-v[,tic])*u*S,  # ageing, no vaccination from susceptible
+      (1-v[,tic])*u*S,  # ageing, no vaccination from succeptible
       u*V,  # ageing in vaccination compartment
       v[,tic]*u*M,  # ageing, vaccination from maternal immune
       u*I,  # ageing, no vaccination from maternal immune
