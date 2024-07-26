@@ -146,7 +146,8 @@ postproc.D  <- function(parameters, out, tran) {
                          all_Inc_D,
                          doses_1_D,
                          deaths_D,
-                         births_D)
+                         births_D,
+                         RecVac_D)
     
     postprocVarNames <- postprocVars %>% sapply(rlang::as_name)
     postprocVarList <- lapply(postprocVarNames, function(varName){
@@ -165,6 +166,8 @@ postproc.D  <- function(parameters, out, tran) {
     death_transitions = tbTransitions_D %>% filter(To=='NullS[n]') %>% pull(id)
     
     birth_transitions <- c(1,2)
+    
+    RecVac_transitions = c(12)
 
 
 
@@ -182,7 +185,7 @@ postproc.D  <- function(parameters, out, tran) {
       postprocVarList$doses_1_D[, n]  <- rowSums(tran[, traind_D[doses_1Transitions, n]] / 365.25)
       postprocVarList$deaths_D[, n]  <- rowSums(tran[, traind_D[death_transitions, n]] / 365.25)# deaths
       postprocVarList$births_D[, n]  <- rowSums(tran[, traind_D[birth_transitions, n]] / 365.25)#births
-       # Prevalence
+      postprocVarList$RecVac_D[, n]  <- (tran[, traind_D[RecVac_transitions, n]] / 365.25)# seropos
     }
     # Ignore from here down
     timesteps <- out[, 1, drop = T]
@@ -237,10 +240,10 @@ run_model.D <- function(parameters, initialConditions, timesteps,
   # We later decided to just have one thing. The bulk of the code assumes this structure now.
   #Solve ODE
   dZ <<- as.numeric(rep(0.0, N*nrow(tbCompartments_D)))
-  LOG("Solving the ODE for Diphtheria with ptrans={parameters$ptrans_D}", LEVEL$TRACE)
+  LOG("Solving the ODE for Rubella with ptrans={parameters$ptrans_D}", LEVEL$TRACE)
   outoderun <- ode(y=initialConditions, times=timesteps, func=epiModel.D, method = "euler", 
                    parms=parameters)
-  LOG("Diphtheria solver diagnostics: {diagnostics(outoderun)}", LEVEL$TRACE)
+  LOG("Rubella solver diagnostics: {diagnostics(outoderun)}", LEVEL$TRACE)
   
   # Return just the raw model output:
   if(returnRawModel && !returnPostprocessedModel) {
@@ -248,7 +251,7 @@ run_model.D <- function(parameters, initialConditions, timesteps,
     return(outoderun)
   }
   
-  LOG("Calculating transition values for Diphtheria now", LEVEL$TRACE)
+  LOG("Calculating transition values for Rubella now", LEVEL$TRACE)
   # Compute transitions at each time step
   tranoderun <- matrix(0,
                        nrow=length(timesteps),
@@ -260,7 +263,7 @@ run_model.D <- function(parameters, initialConditions, timesteps,
                                   t=timesteps[[ti]]))
   }
 
-  LOG("Postprocessing Diphtheria", LEVEL$TRACE)
+  LOG("Postprocessing Rubella", LEVEL$TRACE)
   ppout <- postproc.D(parameters, outoderun, tranoderun)
 
   ppout|>

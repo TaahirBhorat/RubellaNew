@@ -283,8 +283,8 @@ merged_data <- summarized_data %>%
 plot_list <- merged_data %>%
   group_by(fat_age) %>%
   do(plot = ggplot(data = ., aes(x = year)) +
-       geom_line(aes(y = total_value, color = "Model Deaths"), size = 1) +
-       geom_line(aes(y = true_deaths, color = "True Deaths"), size = 1) +
+       geom_point(aes(y = total_value, color = "Model Deaths"), size = 1) +
+       geom_point(aes(y = true_deaths, color = "True Deaths"), size = 1) +
        labs(title = paste("Deaths in Age Group:", unique(.$fat_age)),
             x = "Year",
             y = "Number of Deaths",
@@ -295,6 +295,117 @@ plot_list <- merged_data %>%
 for (p in plot_list$plot) {
   print(p)
 }
+################## Sero-Prevalence Plots ########################################################################################################################################################################
+
+generate_seroprevalence_plot <- function(yr, true_positive_percentage) {
+  mop = mo_baseline$moPostprocessing[[1]] |>
+    mutate(age_group=as_factor(age_group))
+  rubella_data  = as.data.frame(mo_baseline$moRaw)
+  
+  # Extract the 'time' column 
+  time_column <- rubella_data[, 1]
+  
+  # Getting the compartments from the raw data
+  M_columns <- rubella_data[, seq(2, ncol(rubella_data), by=5)]
+  S_columns <- rubella_data[, seq(3, ncol(rubella_data), by=5)]
+  I_columns <- rubella_data[, seq(4, ncol(rubella_data), by=5)]
+  R_columns <- rubella_data[, seq(5, ncol(rubella_data), by=5)]
+  V_columns <- rubella_data[, seq(6, ncol(rubella_data), by=5)]
+  
+  # Ensure column names are consistent
+  colnames(I_columns) <- paste0("Column", 1:ncol(I_columns))
+  colnames(R_columns) <- paste0("Column", 1:ncol(R_columns))
+  colnames(M_columns) <- paste0("Column", 1:ncol(M_columns))
+  colnames(S_columns) <- paste0("Column", 1:ncol(S_columns))
+  colnames(V_columns) <- paste0("Column", 1:ncol(V_columns))
+  
+  groups <- list(
+    group1 = 1:49,
+    group2 = 50:54,
+    group3 = 55:59,
+    group4 = 60:64,
+    group5 = 65:69,
+    group6 = 70:74,
+    group7 = 75:79,
+    group8 = 80:84,
+    group9  = 85:89,
+    group10 = 90:94,
+    group11 = 95:108
+  )
+  
+  RecVac_D = mop %>% filter(variable == 'RecVac_D' & age_group != 'All') %>% select(c(age_group, value,year))
+  RecVac_D_spread <- RecVac_D %>%
+    pivot_wider(names_from = age_group, values_from = value)
+  RecVac_D_spread <- RecVac_D_spread %>% select(-year)
+  
+  # Function to sum correct columns to new age groups
+  sum_groups <- function(df, groups) {
+    col_sums_list <- list()
+    for (i in 1:length(groups)) {
+      group_name <- paste0("sum_group", i)
+      col_sums_list[[group_name]] <- rowSums(df[, groups[[i]]])
+    }
+    new_df <- as.data.frame(col_sums_list)
+    return(new_df)
+  }
+  
+  M_new = sum_groups(M_columns, groups)
+  S_new = sum_groups(S_columns, groups)
+  I_new = sum_groups(I_columns, groups)
+  R_new = sum_groups(R_columns, groups)
+  V_new = sum_groups(V_columns, groups)
+  RecVac_D_spread_new = sum_groups(RecVac_D_spread, groups)
+  
+  # Set the row names of the DataFrame to the dates
+  M_new$date <- time_column
+  S_new$date <- time_column
+  I_new$date <- time_column
+  R_new$date <- time_column
+  V_new$date <- time_column
+  RecVac_D_spread_new$date <- seq(2000, 2030, 1)
+  
+  M_2018 = M_new %>% filter(date == yr) %>% select(-date)
+  S_2018 = S_new %>% filter(date == yr) %>% select(-date)
+  I_2018 = I_new %>% filter(date == yr) %>% select(-date)
+  R_2018 = R_new %>% filter(date == yr) %>% select(-date)
+  V_2018 = V_new %>% filter(date == yr) %>% select(-date)
+  
+  # Function to sum the columns up to a specified date
+  sum_up_to_date <- function(data, target_date) {
+    subset_data <- subset(data, date <= target_date)
+    sums <- colSums(subset_data[, !colnames(subset_data) %in% c("date")])
+    return(sums)
+  }
+  
+  RecVac_D_spread_new_2018 <- data.frame(t(sum_up_to_date(RecVac_D_spread_new, yr)))
+  
+  sero_pos_2018 = data.frame(sero_pos = colSums(rbind(I_2018, R_2018, RecVac_D_spread_new_2018)), 
+                             Total_Pop = colSums(rbind(M_2018, S_2018, I_2018, R_2018, V_2018)))
+  colnames(sero_pos_2018) = c("sero_pos", 'Total Pop')
+  
+  sero_pos_2018$seroprevalence_model <- sero_pos_2018$sero_pos / sero_pos_2018$`Total Pop` * 100
+  sero_pos_2018$seroprevalence_true <- true_positive_percentage
+  
+  age_groups <- c("0-4", "5-9", "10-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-45", "45-49", "50+")
+  sero_pos_2018$age_group <- factor(age_groups, levels = age_groups)
+  
+  sero_pos_2018_long <- sero_pos_2018 %>%
+    select(age_group, seroprevalence_model, seroprevalence_true) %>%
+    pivot_longer(cols = c("seroprevalence_model", "seroprevalence_true"), 
+                 names_to = "type", 
+                 values_to = "seroprevalence")
+  
+  # Plotting
+  ggplot(sero_pos_2018_long, aes(x = age_group, y = seroprevalence, fill = type)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    labs(title = paste("True vs Model Seroprevalence per Age Group in", yr), x = "Age Group", y = "Seroprevalence (%)") +
+    scale_fill_manual(name = "Seroprevalence", values = c("seroprevalence_model" = "skyblue4", "seroprevalence_true" = "salmon"), 
+                      labels = c("Model", "True")) +
+    theme_minimal()
+}
+
+generate_seroprevalence_plot(2000, c(32.7, 66.7, 86.2, 92.5, 92.8, 93.8, 93.1, 90.3, 87.7, 90.7, 87.8))
+
 
 
 
