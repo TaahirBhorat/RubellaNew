@@ -181,7 +181,7 @@ postproc.D  <- function(parameters, out, tran) {
       popa <- rowSums(out[,c(varind_D[c(alivepop_D),n])+1])  # Alive population
       postprocVarList$popa[, n]  <- popa
       postprocVarList$imune_D[, n] <- rowSums(out[, c(varind_D[imuneCompartments, n])+1])
-      postprocVarList$all_Inc_D[, n]  <- (tran[, unname(traind_D[allincTransitions, n])] / 365.25)     # All Incidence
+      postprocVarList$all_Inc_D[, n]  <- (tran[, unname(traind_D[allincTransitions, n])] / 365.25)# All Incidence
       postprocVarList$doses_1_D[, n]  <- rowSums(tran[, traind_D[doses_1Transitions, n]] / 365.25)
       postprocVarList$deaths_D[, n]  <- rowSums(tran[, traind_D[death_transitions, n]] / 365.25)# deaths
       postprocVarList$births_D[, n]  <- rowSums(tran[, traind_D[birth_transitions, n]] / 365.25)#births
@@ -279,7 +279,7 @@ run_model.D <- function(parameters, initialConditions, timesteps,
     scale_color_hue(direction = 1) +
     theme_minimal()
   DISoutage <- ppout %>% 
-    mutate(disease="Diphtheria",
+    mutate(disease="Rubella",
            unit = "Daily") #Daily outputs by age group
 
 
@@ -301,19 +301,19 @@ run_model.D <- function(parameters, initialConditions, timesteps,
   DISoutageyr <- postProcSummarizeYear.D(DISoutageVT)  # Annual outputs by age group
 
   DISoutyr <- bind_rows(DISoutageyr, DISoutallyr) %>% 
-    mutate(disease="Diphtheria",
+    mutate(disease="Rubella",
            unit = "Annual") %>% 
     select(year, age_group, variable, disease, value, unit)
   
-  LOG("Completed Diphtheria, returning tibble with unit=Annual", LEVEL$TRACE)
+  LOG("Completed Rubella, returning tibble with unit=Annual", LEVEL$TRACE)
   
   moPostprocessing = list(DISoutyr)
   if (returnRawModel && returnPostprocessedModel) {
-    LOG("Returning moRaw and moPostprocessing for Diphtheria")
+    LOG("Returning moRaw and moPostprocessing for Rubella")
     return(list(moRaw=outoderun,
                 moPostprocessing=moPostprocessing))
   } else {
-    LOG("Returning *just* moPostprocessing for Diphtheria")
+    LOG("Returning *just* moPostprocessing for Rubella")
     return(moPostprocessing)
   }
 }
@@ -414,7 +414,7 @@ postProcSummarizeAgesYear.D <- function(DISoutageVT) {
   sum4yr = popyr %>%
     transmute(year, variable='pop_D', value=pop)
   
-  bind_rows(sum1yr, sum2yr, sum3yr, sum4yr) %>% mutate(disease="Diphtheria",
+  bind_rows(sum1yr, sum2yr, sum3yr, sum4yr) %>% mutate(disease="Rubella",
                                                        age_group = "All",
                                                        unit = "Annual")
 }
@@ -452,7 +452,7 @@ postProcSummarizeYear.D <- function(DISoutageVT) {
               age_group=age_group,
               variable='pop_D',
               value=pop,
-              disease="Diphtheria")
+              disease="Rubella")
   
   bind_rows(sum1yr, sum2yr, sum3yr, sum4yr) %>% mutate(unit = "Annual")
 }
@@ -468,7 +468,7 @@ pltPostProc.D  <- function(mo, var='inc_pred') {
     geom_line(size = 1.5) +
     theme_minimal() +
     facet_wrap(vars(as_factor(age_group)),scales = 'free_y') +
-    labs(title=as.character(glue::glue("Diphtheria {var} plot per age group")))
+    labs(title=as.character(glue::glue("Rubella {var} plot per age group")))
 }
 
 pltPostProc_yr.D  <- function(mo, var='inc_pred') {
@@ -480,6 +480,6 @@ pltPostProc_yr.D  <- function(mo, var='inc_pred') {
     geom_col(linewidth = 1.5) +
     theme_minimal() +
     facet_wrap(vars(as_factor(age_group)),scales = 'free_y') +
-    labs(title=as.character(glue::glue("Diphtheria {var} plot per age group")))
+    labs(title=as.character(glue::glue("Rubella {var} plot per age group")))
 }
 

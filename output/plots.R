@@ -92,10 +92,10 @@ grid.arrange(plot_M, plot_S, plot_I, plot_R, plot_V, ncol = 1)
 
 
 # Sum all compartments across all ages for each time point
-total_population <- rowSums(M_columns) + rowSums(S_columns) + rowSums(I_columns) + rowSums(R_columns) + rowSums(V_columns)
+total_population_model <- rowSums(M_columns) + rowSums(S_columns) + rowSums(I_columns) + rowSums(R_columns) + rowSums(V_columns)
 
 # Create a data frame for plotting
-plot_data_total <- data.frame(time = time_column, total_population = total_population)
+plot_data_total <- data.frame(time = time_column, total_population = total_population_model)
 
 true_population_path <- 'data/TrueSApopulation.xlsx'
 true_population_data <- read_excel(true_population_path)
@@ -116,7 +116,7 @@ years <- as.numeric(names(total_true_population))
 true_population_df <- data.frame(time = years, total_population = total_true_population)
 
 # Create a data frame for the modeled population (already computed)
-modeled_population_df <- data.frame(time = time_column, total_population = total_population)
+modeled_population_df <- data.frame(time = time_column, total_population = total_population_model)
 
 # Plot the total population over time, comparing modeled vs. true population
 ggplot() +
@@ -202,9 +202,12 @@ true_deaths <- c(
   501666.2887, 503039.8281, 506530.0318, 511686.0082, 513934.7023, 515655.518, 517576.822, 
   520220.1477, 523254.2808, 526794.1637, 531096.2981, 536087.3945, 541694.5845, 547904.0449, 
   554633.2026, 561906.1909, 569705.2916
-)
+) 
+# UN Deaths
+true_deaths = c(490138,526754,574030,622283,641921,659846,669557,663057,648296,624186,594055,568156,
+                545852,544728,536322,522822,519287,508901,515170,521415,586416,733898,586473,584018,
+                591227,600458,609623,618696,627927,637394,646547)
 model_deaths$true_deaths = true_deaths
-model_deaths = model_deaths %>% filter(year)
 # Plot the data using ggplot2
 ggplot(model_deaths, aes(x = year)) +
   geom_line(aes(y = model_deaths, color = "Model Deaths"), size = 1) +
@@ -398,7 +401,7 @@ generate_seroprevalence_plot <- function(yr, true_positive_percentage) {
   # Plotting
   ggplot(sero_pos_2018_long, aes(x = age_group, y = seroprevalence, fill = type)) +
     geom_bar(stat = "identity", position = "dodge") +
-    labs(title = paste("True vs Model Seroprevalence per Age Group in", yr), x = "Age Group", y = "Seroprevalence (%)") +
+    labs(title = paste("True vs Model Seroprevalence per Age Group in", yr, "vs 2018"), x = "Age Group", y = "Seroprevalence (%)") +
     scale_fill_manual(name = "Seroprevalence", values = c("seroprevalence_model" = "skyblue4", "seroprevalence_true" = "salmon"), 
                       labels = c("Model", "True")) +
     theme_minimal()
