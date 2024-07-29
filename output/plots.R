@@ -11,7 +11,7 @@ mop = mo_baseline$moPostprocessing[[1]] |>
   mutate(age_group=as_factor(age_group))
 
 ############# Esquisser for looking at processed data and variables ###########################################
-mop%>%esquisse::esquisser()
+#mop%>%esquisse::esquisser()
 
 ############  Death Compartments Plots (age stratified)#####################################################################
 mop%>%

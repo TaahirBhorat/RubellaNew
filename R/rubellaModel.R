@@ -103,21 +103,21 @@ disrates.D <- function(x, parameters, t) {
       (1-mprop)*bi,  # Births no-maternal-immunity
       mprop*bi,  # Births Maternal Immunity
       d*M,  # Loss of maternal immunity
-      v[,tic]*u*S,  # ageing, vaccination from succeptible
+      v[,tic]*u*S*(1-s[,tic]),  # ageing, vaccination from succeptible
       lambda*S,  # infection
       gamm*I,  # natural recovery
-      (1-v[,tic])*u*M*(1-s),  # ageing, no vaccination from maternal immune
-      (1-v[,tic])*u*S*(1-s),  # ageing, no vaccination from succeptible
-      u*V*(1-s),  # ageing in vaccination compartment
-      v[,tic]*u*M*(1-s),  # ageing, vaccination from maternal immune
-      u*I*(1-s),  # ageing, no vaccination from maternal immune
-      v[,tic]*u*R*(1-s),  # Recovered Vaccination
-      s[,tic]*M*u,  # natural death
+      (1-v[,tic])*u*M*(1-s[,tic]),  # ageing, no vaccination from maternal immune
+      (1-v[,tic])*u*S*(1-s[,tic]),  # ageing, no vaccination from succeptible
+      u*V*(1-s[,tic]),  # ageing in vaccination compartment
+      v[,tic]*u*M*(1-s[,tic]),  # ageing, vaccination from maternal immune
+      u*I*(1-s[,tic]),  # ageing, no vaccination from maternal immune
+      v[,tic]*u*R*(1-s[,tic]),  # Recovered Vaccination
+      s[,tic]*M*u*(1-s[,tic]),  # natural death
       s[,tic]*S*u,  # natural death
       s[,tic]*I*u,  # natural death
       s[,tic]*R*u,  # natural death
       s[,tic]*V*u,  # natural death
-      (1-v[,tic])*u*R  # Recovered ageing
+      (1-v[,tic])*u*R*(1-s[,tic])  # Recovered ageing
     ), dim=c(N, 18))
     tranrate <- c(t(tranrate))
   })
