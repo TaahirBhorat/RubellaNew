@@ -407,7 +407,7 @@ generate_seroprevalence_plot <- function(yr, true_positive_percentage) {
     theme_minimal()
 }
 
-generate_seroprevalence_plot(2000, c(32.7, 66.7, 86.2, 92.5, 92.8, 93.8, 93.1, 90.3, 87.7, 90.7, 87.8))
+generate_seroprevalence_plot(2030, c(32.7, 66.7, 86.2, 92.5, 92.8, 93.8, 93.1, 90.3, 87.7, 90.7, 87.8))
 
 
 

@@ -106,26 +106,20 @@ disrates.D <- function(x, parameters, t) {
       v[,tic]*u*S,  # ageing, vaccination from succeptible
       lambda*S,  # infection
       gamm*I,  # natural recovery
-      (1-v[,tic])*u*M,  # ageing, no vaccination from maternal immune
-      (1-v[,tic])*u*S,  # ageing, no vaccination from succeptible
-      u*V,  # ageing in vaccination compartment
-      v[,tic]*u*M,  # ageing, vaccination from maternal immune
-      u*I,  # ageing, no vaccination from maternal immune
-      v[,tic]*u*R,  # Recovered Vaccination
-      s[,tic]*M,  # natural death
-      s[,tic]*S,  # natural death
-      s[,tic]*I,  # natural death
-      s[,tic]*R,  # natural death
-      s[,tic]*V,  # natural death
+      (1-v[,tic])*u*M*(1-s),  # ageing, no vaccination from maternal immune
+      (1-v[,tic])*u*S*(1-s),  # ageing, no vaccination from succeptible
+      u*V*(1-s),  # ageing in vaccination compartment
+      v[,tic]*u*M*(1-s),  # ageing, vaccination from maternal immune
+      u*I*(1-s),  # ageing, no vaccination from maternal immune
+      v[,tic]*u*R*(1-s),  # Recovered Vaccination
+      s[,tic]*M*u,  # natural death
+      s[,tic]*S*u,  # natural death
+      s[,tic]*I*u,  # natural death
+      s[,tic]*R*u,  # natural death
+      s[,tic]*V*u,  # natural death
       (1-v[,tic])*u*R  # Recovered ageing
     ), dim=c(N, 18))
     tranrate <- c(t(tranrate))
-    #browser()
-  if(any(is.na(tranrate)) == TRUE){
-    browser()
-  }
-    # T2 <- Sys.time()
-    return(tranrate)
   })
 }
 
