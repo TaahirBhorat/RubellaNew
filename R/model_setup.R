@@ -54,7 +54,7 @@ cppFunction('
   }
 ')
 #### Model start-up definitions ####
-N <- 108   # number of patches (age bands)
+N <- 63   # number of patches (age bands)
 #### Import Data ####
 
 startyear <- 2000 # starting year of simulation 2015-01-01

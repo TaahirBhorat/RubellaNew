@@ -25,7 +25,7 @@ getModelInputs <-function(prefix="parameters/inputs_",suffix="Baseline",scenario
     setdiff("contact")
   workbookList <- sheet_names |>
     sapply(function(sheet)readxl::read_excel(fname, sheet = sheet), simplify=F)
-  workbookList$contact <- read_excel(fname, sheet = "contact", col_names = paste0("V", 1:108))
+  workbookList$contact <- read_excel(fname, sheet = "contact", col_names = paste0("V", 1:63))
   
   ## singles
   result <- workbookList$singles %>% pull(value, name=name)

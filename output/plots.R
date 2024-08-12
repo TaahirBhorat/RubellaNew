@@ -174,13 +174,7 @@ Deaths <- mop %>%
 
 # Define the original age groups
 age_groups <- c(
-  "0-1 month", "1-2 month", "2-3 month", "3-4 month", "4-5 month", "5-6 month", "6-7 month",
-  "7-8 month", "8-9 month", "9-10 month", "10-11 month", "11-12 month", "12-13 month", "13-14 month",
-  "14-15 month", "15-16 month", "16-17 month", "17-18 month", "18-19 month", "19-20 month", "20-21 month",
-  "21-22 month", "22-23 month", "23-24 month", "24-25 month", "25-26 month", "26-27 month", "27-28 month",
-  "28-29 month", "29-30 month", "30-31 month", "31-32 month", "32-33 month", "33-34 month", "34-35 month",
-  "35-36 month", "36-37 month", "37-38 month", "38-39 month", "39-40 month", "40-41 month", "41-42 month",
-  "42-43 month", "43-44 month", "44-45 month", "45-46 month", "46-47 month", "47-48 months", "4-5 years",
+  "0-6 month", "6-12 month","1-2 years","2-3 years","3-4 years", "4-5 years",
   "5-6 years", "6-7 years", "7-8 years", "8-9 years", "9-10 years", "10-11 years", "11-12 years",
   "12-13 years", "13-14 years", "14-15 years", "15-16 years", "16-17 years", "17-18 years", "18-19 years",
   "19-20 years", "20-21 years", "21-22 years", "22-23 years", "23-24 years", "24-25 years", "25-26 years",
@@ -189,7 +183,7 @@ age_groups <- c(
   "40-41 years", "41-42 years", "42-43 years", "43-44 years", "44-45 years", "45-46 years", "46-47 years",
   "47-48 years", "48-49 years", "49-50 years", "50-51 years", "51-52 years", "52-53 years", "53-54 years",
   "54-55 years", "55-56 years", "56-57 years", "57-58 years", "58-59 years", "59-60 years", "60-70 years",
-  "70-80 years", "80-90 years", "90+"
+  "70+"
 )
 
 
@@ -204,9 +198,9 @@ true_deaths <- c(
   554633.2026, 561906.1909, 569705.2916
 ) 
 # UN Deaths
-true_deaths = c(490138,526754,574030,622283,641921,659846,669557,663057,648296,624186,594055,568156,
-                545852,544728,536322,522822,519287,508901,515170,521415,586416,733898,586473,584018,
-                591227,600458,609623,618696,627927,637394,646547)
+#true_deaths = c(490138,526754,574030,622283,641921,659846,669557,663057,648296,624186,594055,568156,
+#                545852,544728,536322,522822,519287,508901,515170,521415,586416,733898,586473,584018,
+#                591227,600458,609623,618696,627927,637394,646547)
 model_deaths$true_deaths = true_deaths
 # Plot the data using ggplot2
 ggplot(model_deaths, aes(x = year)) +
@@ -220,10 +214,10 @@ ggplot(model_deaths, aes(x = year)) +
 ######## Fat Age Group Death: Model vs True###################################################################################
 # Manually map these into larger age groups
 mapped_age_groups <- c(
-  rep("0-1 year", 12),
-  rep("1-2 years", 12),
-  rep("2-3 years", 12),
-  rep("3-4 years", 12),
+  rep("0-1 year", 2),
+  rep("1-2 years", 1),
+  rep("2-3 years", 1),
+  rep("3-4 years", 1),
   rep("4-5 years", 1),
   rep("5-10 years", 5),
   rep("10-20 years", 10),
@@ -238,8 +232,8 @@ mapped_age_groups <- c(
 )
 
 mapped_age_groups <- c(
-  rep("0-14", 58),
-  rep("15-19", 5),
+  rep("0-14", 16),
+  rep("15-19", 4),
   rep("20-24", 5),
   rep("25-29", 5),
   rep("30-34", 5),
@@ -248,7 +242,7 @@ mapped_age_groups <- c(
   rep("45-49", 5),
   rep("50-54", 5),
   rep("55-60", 6),
-  rep("60+", 4)
+  rep("60+", 2)
 )
 
 
@@ -299,7 +293,6 @@ for (p in plot_list$plot) {
   print(p)
 }
 ################## Sero-Prevalence Plots ########################################################################################################################################################################
-
 generate_seroprevalence_plot <- function(yr, true_positive_percentage) {
   mop = mo_baseline$moPostprocessing[[1]] |>
     mutate(age_group=as_factor(age_group))
@@ -323,17 +316,17 @@ generate_seroprevalence_plot <- function(yr, true_positive_percentage) {
   colnames(V_columns) <- paste0("Column", 1:ncol(V_columns))
   
   groups <- list(
-    group1 = 1:49,
-    group2 = 50:54,
-    group3 = 55:59,
-    group4 = 60:64,
-    group5 = 65:69,
-    group6 = 70:74,
-    group7 = 75:79,
-    group8 = 80:84,
-    group9  = 85:89,
-    group10 = 90:94,
-    group11 = 95:108
+    group1 = 1:6,
+    group2 = 7:10,
+    group3 = 11:15,
+    group4 = 16:20,
+    group5 = 21:25,
+    group6 = 26:30,
+    group7 = 31:35,
+    group8 = 36:40,
+    group9  = 41:45,
+    group10 = 46:50,
+    group11 = 51:63
   )
   
   RecVac_D = mop %>% filter(variable == 'RecVac_D' & age_group != 'All') %>% select(c(age_group, value,year))
@@ -406,9 +399,71 @@ generate_seroprevalence_plot <- function(yr, true_positive_percentage) {
                       labels = c("Model", "True")) +
     theme_minimal()
 }
+true_2018  = c(32.7, 66.7, 86.2, 92.5, 92.8, 93.8, 93.1, 90.3, 87.7, 90.7, 87.8)
+generate_seroprevalence_plot(2018, true_2018)
+################################ CRS COUNTING ##############################################################
+raw_output_df = rubella_data
+head(raw_output_df)
 
-generate_seroprevalence_plot(2030, c(32.7, 66.7, 86.2, 92.5, 92.8, 93.8, 93.1, 90.3, 87.7, 90.7, 87.8))
+# Assuming you have a yearly births vector
 
+
+
+# Parametersx
+
+
+c <- 0.05  # constant first 16 week pregnancy infection
+b <- unname(param_Baseline$births)  
+ptrans <- param_Baseline$ptrans  #ptrans
+contact_matrix <-param_Baseline$contact  # Example contact matrix, replace with actual data
+yearly_births <- b  
+
+
+# Distribute the yearly births across the time vector
+daily_births <- rep(yearly_births / 365.25, each = 365.25)
+daily_births <- daily_births[1:length(time)]  # Ensure it matches the length of the time vector
+b = daily_births
+# Extract data
+time <- raw_output_df[[1]]
+S <- S_columns
+I <- I_columns
+total_pop <- modeled_population_df['total_population']
+
+# Age indices for childbearing age groups (15-49 years)
+childbearing_age_indices <- 60:93
+
+# Calculate CRS cases over time
+CRS_cases_over_time <- numeric(length(time))
+
+for (ti in 1:length(time)) {
+  ti  = 1
+  # Calculate force of infection (Phi_t) for the current time step
+  infectious_D <- I[ti, ] / total_pop[ti, ]
+  lambda_t <- ptrans * as.vector(contact_matrix %*% t(infectious_D))
+  
+  # Adjust f_a by birth rate for childbearing age group
+  f_a <- b[ti]* (total_pop[ti, ] / sum(total_pop[ti, ]))
+  
+  # Extract compartment values for childbearing age group
+  S_childbearing <- I[ti, childbearing_age_indices]
+  
+  # Calculate CRS cases at the current time step
+  CRS_cases <- sum(f_a * c * lambda_t[childbearing_age_indices] * S_childbearing)
+  
+  # Store CRS cases
+  CRS_cases_over_time[ti] <- CRS_cases
+}
+
+# Create a DataFrame with time and CRS cases
+CRS_cases_df <- data.frame(time = time, CRS_cases = CRS_cases_over_time)
+ggplot(CRS_cases_df, aes(x = time, y = CRS_cases)) +
+  geom_line(color = "blue") +
+  labs(title = "CRS Cases Over Time",
+       x = "Time (days)",
+       y = "CRS Cases") +
+  theme_minimal()
+
+head(CRS_cases_df)
 
 
 
