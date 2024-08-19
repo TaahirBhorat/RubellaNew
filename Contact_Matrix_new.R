@@ -142,8 +142,9 @@ tbNew <- tbTotalNew %>%
   select(age_participant, age_contact, value)
 
 contacts_new <- std_to_mat(tbNew)
-image(contacts_new, main="New Matrix") 
+image(contacts_new, main="New Matrix", ) 
 image(contacts[1:16,1:16], main="Old Matrix")
+geom_h
 
 # Write it out:
 #install.packages("writexl")

@@ -233,7 +233,7 @@ mapped_age_groups <- c(
 
 mapped_age_groups <- c(
   rep("0-14", 16),
-  rep("15-19", 4),
+  rep("15-19", 5),
   rep("20-24", 5),
   rep("25-29", 5),
   rep("30-34", 5),
@@ -241,7 +241,7 @@ mapped_age_groups <- c(
   rep("40-44", 5),
   rep("45-49", 5),
   rep("50-54", 5),
-  rep("55-60", 6),
+  rep("55-60", 5),
   rep("60+", 2)
 )
 
@@ -293,6 +293,8 @@ for (p in plot_list$plot) {
   print(p)
 }
 ################## Sero-Prevalence Plots ########################################################################################################################################################################
+# Check what the assay actually picks up
+# Add M (Research: see if its detected by sero_prec instrument) 
 generate_seroprevalence_plot <- function(yr, true_positive_percentage) {
   mop = mo_baseline$moPostprocessing[[1]] |>
     mutate(age_group=as_factor(age_group))
@@ -402,72 +404,73 @@ generate_seroprevalence_plot <- function(yr, true_positive_percentage) {
 true_2018  = c(32.7, 66.7, 86.2, 92.5, 92.8, 93.8, 93.1, 90.3, 87.7, 90.7, 87.8)
 generate_seroprevalence_plot(2018, true_2018)
 ################################ CRS COUNTING ##############################################################
-raw_output_df = rubella_data
-head(raw_output_df)
-
-# Assuming you have a yearly births vector
-
-
-
-# Parametersx
-
-
-c <- 0.05  # constant first 16 week pregnancy infection
-b <- unname(param_Baseline$births)  
-ptrans <- param_Baseline$ptrans  #ptrans
-contact_matrix <-param_Baseline$contact  # Example contact matrix, replace with actual data
-yearly_births <- b  
-
-
-# Distribute the yearly births across the time vector
-daily_births <- rep(yearly_births / 365.25, each = 365.25)
-daily_births <- daily_births[1:length(time)]  # Ensure it matches the length of the time vector
-b = daily_births
-# Extract data
-time <- raw_output_df[[1]]
-S <- S_columns
-I <- I_columns
-total_pop <- modeled_population_df['total_population']
-
-# Age indices for childbearing age groups (15-49 years)
-childbearing_age_indices <- 60:93
-
-# Calculate CRS cases over time
-CRS_cases_over_time <- numeric(length(time))
-
-for (ti in 1:length(time)) {
-  ti  = 1
-  # Calculate force of infection (Phi_t) for the current time step
-  infectious_D <- I[ti, ] / total_pop[ti, ]
-  lambda_t <- ptrans * as.vector(contact_matrix %*% t(infectious_D))
-  
-  # Adjust f_a by birth rate for childbearing age group
-  f_a <- b[ti]* (total_pop[ti, ] / sum(total_pop[ti, ]))
-  
-  # Extract compartment values for childbearing age group
-  S_childbearing <- I[ti, childbearing_age_indices]
-  
-  # Calculate CRS cases at the current time step
-  CRS_cases <- sum(f_a * c * lambda_t[childbearing_age_indices] * S_childbearing)
-  
-  # Store CRS cases
-  CRS_cases_over_time[ti] <- CRS_cases
-}
-
-# Create a DataFrame with time and CRS cases
-CRS_cases_df <- data.frame(time = time, CRS_cases = CRS_cases_over_time)
-ggplot(CRS_cases_df, aes(x = time, y = CRS_cases)) +
-  geom_line(color = "blue") +
-  labs(title = "CRS Cases Over Time",
-       x = "Time (days)",
-       y = "CRS Cases") +
-  theme_minimal()
-
-head(CRS_cases_df)
-
-
+# raw_output_df = rubella_data
+# head(raw_output_df)
+# 
+# # Assuming you have a yearly births vector
+# 
+# 
+# 
+# # Parametersx
+# 
+# 
+# c <- 0.05  # constant first 16 week pregnancy infection
+# b <- unname(param_Baseline$births)  
+# ptrans <- param_Baseline$ptrans  #ptrans
+# contact_matrix <-param_Baseline$contact  # Example contact matrix, replace with actual data
+# yearly_births <- b  
+# 
+# 
+# # Distribute the yearly births across the time vector
+# daily_births <- rep(yearly_births / 365.25, each = 365.25)
+# daily_births <- daily_births[1:length(time)]  # Ensure it matches the length of the time vector
+# b = daily_births
+# # Extract data
+# time <- raw_output_df[[1]]
+# S <- S_columns
+# I <- I_columns
+# total_pop <- modeled_population_df['total_population']
+# 
+# # Age indices for childbearing age groups (15-49 years)
+# childbearing_age_indices <- 60:93
+# 
+# # Calculate CRS cases over time
+# CRS_cases_over_time <- numeric(length(time))
+# 
+# for (ti in 1:length(time)) {
+#   ti  = 1
+#   # Calculate force of infection (Phi_t) for the current time step
+#   infectious_D <- I[ti, ] / total_pop[ti, ]
+#   lambda_t <- ptrans * as.vector(contact_matrix %*% t(infectious_D))
+#   
+#   # Adjust f_a by birth rate for childbearing age group
+#   f_a <- b[ti]* (total_pop[ti, ] / sum(total_pop[ti, ]))
+#   
+#   # Extract compartment values for childbearing age group
+#   S_childbearing <- I[ti, childbearing_age_indices]
+#   
+#   # Calculate CRS cases at the current time step
+#   CRS_cases <- sum(f_a * c * lambda_t[childbearing_age_indices] * S_childbearing)
+#   
+#   # Store CRS cases
+#   CRS_cases_over_time[ti] <- CRS_cases
+# }
+# 
+# # Create a DataFrame with time and CRS cases
+# CRS_cases_df <- data.frame(time = time, CRS_cases = CRS_cases_over_time)
+# ggplot(CRS_cases_df, aes(x = time, y = CRS_cases)) +
+#   geom_line(color = "blue") +
+#   labs(title = "CRS Cases Over Time",
+#        x = "Time (days)",
+#        y = "CRS Cases") +
+#   theme_minimal()
+# 
+# head(CRS_cases_df)
 
 
 
+# Fit u_young and u_old, to fat age group deaths
+### Try to leigh one-year age groups. 
+## how many people to get correct starting age group
 
 

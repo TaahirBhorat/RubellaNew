@@ -112,7 +112,7 @@ disrates.D <- function(x, parameters, t) {
       v[,tic]*u*M*(1-s[,tic]),  # ageing, vaccination from maternal immune
       u*I*(1-s[,tic]),  # ageing, no vaccination from maternal immune
       v[,tic]*u*R*(1-s[,tic]),  # Recovered Vaccination
-      s[,tic]*M*u*(1-s[,tic]),  # natural death
+      s[,tic]*M*u,  # natural death
       s[,tic]*S*u,  # natural death
       s[,tic]*I*u,  # natural death
       s[,tic]*R*u,  # natural death
