@@ -76,11 +76,10 @@ abline(v = optimal_param, col = "red", lwd = 2, lty = 2)
 
 ####################### RE-RUN MODEL WITH OPTIMAL PARAMTERS ###################################################################
 
-#Run the model with the optimal parameter and inspect the results
   # Young ageing rate optim
 param_Baseline$u[c(1,2)]=rep(0.5,2)
-#check
 print(param_Baseline$u[c(1,2)])
+
   # Old ageing rate optim
 param_Baseline$u[c(62,63)]=rep(0.7,2)
 print(param_Baseline$u[c(62,63)])
@@ -88,6 +87,5 @@ mo_optimal=run_model.D(param_Baseline, initialConditions, timesteps)
 mo_baseline = mo_optimal
 
 ####################### CHECK PLOTTING OUTPUT ###################################################################
-
 source(here::here("output/Plots.R"))
 
