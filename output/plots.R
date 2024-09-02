@@ -292,6 +292,10 @@ plot_list <- merged_data %>%
 for (p in plot_list$plot) {
   print(p)
 }
+
+## 0-1 year deaths = 
+
+
 ################## Sero-Prevalence Plots ########################################################################################################################################################################
 # Check what the assay actually picks up
 # Add M (Research: see if its detected by sero_prec instrument) 
