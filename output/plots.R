@@ -3,6 +3,7 @@
 library(ggplot2)
 library(dplyr)
 library(gridExtra)
+install.packages("languageserver")
 
 #### Plots ####
 
@@ -45,28 +46,44 @@ rubella_data  = as.data.frame(mo_baseline$moRaw)
 time_column <- rubella_data[, 1]
 
 # Getting the compartments from the raw data
-M_columns <- rubella_data[, seq(2, ncol(rubella_data), by=5)]
-S_columns <- rubella_data[, seq(3, ncol(rubella_data), by=5)]
-I_columns <- rubella_data[, seq(4, ncol(rubella_data), by=5)]
-R_columns <- rubella_data[, seq(5, ncol(rubella_data), by=5)]
-V_columns <- rubella_data[, seq(6, ncol(rubella_data), by=5)]
+M_columns <- rubella_data[, seq(2, ncol(rubella_data), by=9)]
+S_columns <- rubella_data[, seq(3, ncol(rubella_data), by=9)]
+E_columns <- rubella_data[, seq(4, ncol(rubella_data), by=9)]
+I_columns <- rubella_data[, seq(5, ncol(rubella_data), by=9)]
+R_columns <- rubella_data[, seq(6, ncol(rubella_data), by=9)]
+V1p_columns <- rubella_data[, seq(7, ncol(rubella_data), by=9)]
+V1np_columns <- rubella_data[, seq(8, ncol(rubella_data), by=9)]
+V2p_columns <- rubella_data[, seq(9, ncol(rubella_data), by=9)]
+V2np_columns <- rubella_data[, seq(10, ncol(rubella_data), by=9)]
+
 
 # Sum all compartments across all ages for each time point
 total_M <- rowSums(M_columns)
 total_S <- rowSums(S_columns)
+total_E = rowSums(E_columns)
 total_I <- rowSums(I_columns)
 total_R <- rowSums(R_columns)
-total_V <- rowSums(V_columns)
+total_V1p <- rowSums(V1p_columns)
+total_V1np <- rowSums(V1np_columns)
+total_V2p <- rowSums(V2p_columns)
+total_V2np <- rowSums(V1np_columns)
+
+
 
 # Create compartment data frames for plotting
 plot_data_M <- data.frame(time = time_column, total = total_M, compartment = "M")
 plot_data_S <- data.frame(time = time_column, total = total_S, compartment = "S")
+plot_data_E <- data.frame(time = time_column, total = total_E, compartment = "E")
 plot_data_I <- data.frame(time = time_column, total = total_I, compartment = "I")
 plot_data_R <- data.frame(time = time_column, total = total_R, compartment = "R")
-plot_data_V <- data.frame(time = time_column, total = total_V, compartment = "V")
+plot_data_V1p <- data.frame(time = time_column, total = total_V1p, compartment = "V1p")
+plot_data_V1np <- data.frame(time = time_column, total = total_V1np, compartment = "V1np")
+plot_data_V2p <- data.frame(time = time_column, total = total_V2p, compartment = "V2p")
+plot_data_V2np <- data.frame(time = time_column, total = total_V2np, compartment = "V2np")
 
-# Combine compartment data frames into one
-plot_data <- rbind(plot_data_M, plot_data_S, plot_data_I, plot_data_R, plot_data_V)
+# Combine all compartment data frames into one
+plot_data <- rbind(plot_data_M, plot_data_S, plot_data_E, plot_data_I, plot_data_R, 
+                   plot_data_V1p, plot_data_V1np, plot_data_V2p, plot_data_V2np)
 
 # Define a plotting function
 plot_compartment <- function(data, title) {
@@ -80,19 +97,28 @@ plot_compartment <- function(data, title) {
 # Generate individual plots for each compartment
 plot_M <- plot_compartment(plot_data_M, "Total M Compartment Over Time")
 plot_S <- plot_compartment(plot_data_S, "Total S Compartment Over Time")
+plot_E <- plot_compartment(plot_data_E, "Total E Compartment Over Time")
 plot_I <- plot_compartment(plot_data_I, "Total I Compartment Over Time")
 plot_R <- plot_compartment(plot_data_R, "Total R Compartment Over Time")
-plot_V <- plot_compartment(plot_data_V, "Total V Compartment Over Time")
+plot_V1p <- plot_compartment(plot_data_V1p, "Total V1p Compartment Over Time")
+plot_V1np <- plot_compartment(plot_data_V1np, "Total V1np Compartment Over Time")
+plot_V2p <- plot_compartment(plot_data_V2p, "Total V2p Compartment Over Time")
+plot_V2np <- plot_compartment(plot_data_V2np, "Total V2np Compartment Over Time")
 
-# Arrange the plots in a grid
-grid.arrange(plot_M, plot_S, plot_I, plot_R, plot_V, ncol = 1)
+# Arrange the plots in a grid (you may use different ncol settings for better arrangement)
+library(gridExtra)
+grid.arrange(plot_M, plot_S, plot_E, plot_I, plot_R, plot_V1p, plot_V1np, plot_V2p, plot_V2np, ncol = 3)
+
 
 
 ######################## total population plot##########################################################################
 
 
 # Sum all compartments across all ages for each time point
-total_population_model <- rowSums(M_columns) + rowSums(S_columns) + rowSums(I_columns) + rowSums(R_columns) + rowSums(V_columns)
+total_population_model <- rowSums(M_columns) + rowSums(S_columns) + rowSums(E_columns) +
+  rowSums(I_columns) + rowSums(R_columns) +
+  rowSums(V1p_columns) + rowSums(V1np_columns) + 
+  rowSums(V2p_columns) + rowSums(V2np_columns)
 
 # Create a data frame for plotting
 plot_data_total <- data.frame(time = time_column, total_population = total_population_model)
@@ -211,6 +237,8 @@ ggplot(model_deaths, aes(x = year)) +
        y = "Number of Deaths",
        color = "Legend") +
   theme_minimal()
+
+
 ######## Fat Age Group Death: Model vs True###################################################################################
 # Manually map these into larger age groups
 mapped_age_groups <- c(
@@ -400,13 +428,13 @@ generate_seroprevalence_plot <- function(yr, true_positive_percentage) {
   # Plotting
   ggplot(sero_pos_2018_long, aes(x = age_group, y = seroprevalence, fill = type)) +
     geom_bar(stat = "identity", position = "dodge") +
-    labs(title = paste("True vs Model Seroprevalence per Age Group in", yr, "vs 2018"), x = "Age Group", y = "Seroprevalence (%)") +
+    labs(title = paste("NHLS vs Model Seroprevalence per Age Group in", yr, "vs 2018"), x = "Age Group", y = "Seroprevalence (%)") +
     scale_fill_manual(name = "Seroprevalence", values = c("seroprevalence_model" = "skyblue4", "seroprevalence_true" = "salmon"), 
                       labels = c("Model", "True")) +
     theme_minimal()
 }
 true_2018  = c(32.7, 66.7, 86.2, 92.5, 92.8, 93.8, 93.1, 90.3, 87.7, 90.7, 87.8)
-generate_seroprevalence_plot(2018, true_2018)
+generate_seroprevalence_plot(2019, true_2018)
 ################################ CRS COUNTING ##############################################################
 # raw_output_df = rubella_data
 # head(raw_output_df)
@@ -473,8 +501,14 @@ generate_seroprevalence_plot(2018, true_2018)
 
 
 
-# Fit u_young and u_old, to fat age group deaths
-### Try to leigh one-year age groups. 
-## how many people to get correct starting age group
+
+init_conds <- read_excel("parameters/DataWorkbookRubella.xlsx", sheet = 'init_cond')[-1]
+pop_i = sum(init_conds$M) + sum(init_conds$S) + sum(init_conds$I)+sum(init_conds$R) + sum(init_conds$V)  
+pop_temp = pop_i
+pop_temp[1] = pop_i +true_births_df$value[1]- true_deaths[1]
+for(i in 2:31){
+  pop_temp[i] = pop_temp[i-1] +true_births_df$value[i] - true_deaths[i]
+}
+plot(pop_temp)
 
 

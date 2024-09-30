@@ -14,6 +14,15 @@ modelFilename <- 'modelStructure/RubellaModel.xlsx'
 # To update shinyInputs: mt_updateShinyInputs
 # To update parameter sheet: mt_updateParameters(overwrite=T)
 
+# 18 Sept:
+### initial conditions redo
+### Transition tracking
+### re-update the transitions
+### 
+
+
+
+
 #### Read mtMod_D in ####
 mtMod_D <- mt_getTibblesInList(modelFilename=modelFilename)
 
@@ -78,7 +87,7 @@ disrates.D <- function(x, parameters, t) {
     #parameters
 
     infectious_D <- (I)/D.pop
-    lambda = 1*ptrans*as.vector(contact%*%infectious_D)
+    lambda = 0#1*ptrans*as.vector(contact%*%infectious_D)
     
     
     
@@ -103,22 +112,41 @@ disrates.D <- function(x, parameters, t) {
       (1-mprop)*bi,  # Births no-maternal-immunity
       mprop*bi,  # Births Maternal Immunity
       d*M,  # Loss of maternal immunity
-      v[,tic]*u*S*(1-s[,tic]),  # ageing, vaccination from succeptible
-      lambda*S,  # infection
+      (1-s[,tic])*(1-v1[,tic])*u*M,  # ageing, no vaccination from maternal immune
+      s[,tic]*u*M,  # natural death
+      (1-s[,tic])*v1[,tic]*u*e*M,  # Maternal Immune protected vaccination
+      (1-s[,tic])*v1[,tic]*u*(1-e)*M,  # Maternal Immune  not-protected vaccination
+      lambda*S,  # Exposed not infectious 
+      (1-s[,tic])*v1[,tic]*u*e*S,  # Succeptible  protected vaccination dose 1
+      (1-s[,tic])*v1[,tic]*u*(1-e)*S,  # Succeptible not-protected vaccination dose 1
+      s[,tic]*u*S,  # natural death
+      (1-s[,tic])*(1-v1[,tic])*(1-v2[,tic])*u*S,  # ageing, no vaccination from succeptible
+      (1-s[,tic])*v2[,tic]*u*e*S,  # Succeptible  protected vaccination dose 2
+      (1-s[,tic])*v2[,tic]*u*(1-e)*S,  # Succeptible not-protected vaccination dose 2
+      s[,tic]*u*E,  # natural death
+      alpha*I,  # become infectious
+      (1-s[,tic])*u*E,  # ageing, no vaccination from Exposed
       gamm*I,  # natural recovery
-      (1-v[,tic])*u*M*(1-s[,tic]),  # ageing, no vaccination from maternal immune
-      (1-v[,tic])*u*S*(1-s[,tic]),  # ageing, no vaccination from succeptible
-      u*V*(1-s[,tic]),  # ageing in vaccination compartment
-      v[,tic]*u*M*(1-s[,tic]),  # ageing, vaccination from maternal immune
-      u*I*(1-s[,tic]),  # ageing, no vaccination from maternal immune
-      v[,tic]*u*R*(1-s[,tic]),  # Recovered Vaccination
-      s[,tic]*M*u,  # natural death
-      s[,tic]*S*u,  # natural death
-      s[,tic]*I*u,  # natural death
-      s[,tic]*R*u,  # natural death
-      s[,tic]*V*u,  # natural death
-      (1-v[,tic])*u*R*(1-s[,tic])  # Recovered ageing
-    ), dim=c(N, 18))
+      s[,tic]*u*I,  # natural death
+      (1-s[,tic])*u*I,  # ageing, no vaccination from infectious
+      s[,tic]*u*R,  # natural death
+      (1-s[,tic])*(1-v1[,tic])*(1-v2[,tic])*u*R,  # ageing, no vaccination from Recovered
+      (1-s[,tic])*v1[,tic]*u*R,  # Recovered  protected vaccination
+      (1-s[,tic])*v2[,tic]*u*R,  # recovered  protected vaccination, dose 2
+      s[,tic]*u*V1p,  # natural death
+      (1-s[,tic])*(1-v2[,tic])*u*V1p,  # Ageing, from vaccinated
+      (1-s[,tic])*u*v2[,tic]*V1p,  # Vaccinated dose, protected dose 1
+      s[,tic]*u*V1np,  # natural death
+      (1-s[,tic])*(1-v2[,tic])*u*V1np,  # Ageing, from vaccinated
+      lambda*V1np,  # Exposed not infectious, no protection from vaccine 
+      (1-s[,tic])*(1-e)*v2[,tic]*u*V1np,  # Dose 2 no protection from dose 1 no protection
+      (1-s[,tic])*e*v2[,tic]*u*V1np,  # Dose 2  protection from dose 1 no protection
+      s[,tic]*u*V2p,  # natural death
+      (1-s[,tic])*u*V2p,  # Ageing, from vaccinated
+      s[,tic]*u*V2np,  # natural death
+      (1-s[,tic])*u*V2np,  # Ageing, from vaccinated
+      lambda*V2np  # Exposed not infectious, no protection from vaccine 
+    ), dim=c(N, 37))
     tranrate <- c(t(tranrate))
   })
 }
@@ -139,9 +167,9 @@ postproc.D  <- function(parameters, out, tran) {
                          imune_D,
                          all_Inc_D,
                          doses_1_D,
-                         deaths_D,
-                         births_D,
-                         RecVac_D)
+                         deaths_D)
+                         #births_D,
+                         #RecVac_D)
     
     postprocVarNames <- postprocVars %>% sapply(rlang::as_name)
     postprocVarList <- lapply(postprocVarNames, function(varName){
@@ -153,15 +181,15 @@ postproc.D  <- function(parameters, out, tran) {
     #Count the things
     #Grouping Transitions for use for counting 
     allincTransitions <- tbTransitions_D %>% filter(To%in%c('I[n]')) %>% pull(id)
-    imuneCompartments <- c('M',"V",'R')
+    imuneCompartments <- c('M',"V1p", "V2p",'R')
 
-    doses_1Transitions <- tbTransitions_D %>% filter(To=='V[nxt]') %>% pull(id)
+    doses_1Transitions <- tbTransitions_D %>% filter(To=='V1p[nxt]') %>% pull(id)
     
     death_transitions = tbTransitions_D %>% filter(To=='NullS[n]') %>% pull(id)
     
-    birth_transitions <- c(1,2)
+    #birth_transitions <- c(1,2)
     
-    RecVac_transitions = c(12)
+    #RecVac_transitions = c(12)
 
 
 
@@ -178,8 +206,8 @@ postproc.D  <- function(parameters, out, tran) {
       postprocVarList$all_Inc_D[, n]  <- (tran[, unname(traind_D[allincTransitions, n])] / 365.25)# All Incidence
       postprocVarList$doses_1_D[, n]  <- rowSums(tran[, traind_D[doses_1Transitions, n]] / 365.25)
       postprocVarList$deaths_D[, n]  <- rowSums(tran[, traind_D[death_transitions, n]] / 365.25)# deaths
-      postprocVarList$births_D[, n]  <- rowSums(tran[, traind_D[birth_transitions, n]] / 365.25)#births
-      postprocVarList$RecVac_D[, n]  <- (tran[, traind_D[RecVac_transitions, n]] / 365.25)# seropos
+      #postprocVarList$births_D[, n]  <- rowSums(tran[, traind_D[birth_transitions, n]] / 365.25)#births
+      #postprocVarList$RecVac_D[, n]  <- (tran[, traind_D[RecVac_transitions, n]] / 365.25)# seropos
     }
     # Ignore from here down
     timesteps <- out[, 1, drop = T]

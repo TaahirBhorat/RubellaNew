@@ -127,7 +127,7 @@ abline(v = optimal_param, col = "red", lwd = 2, lty = 2)
 ####################### RE-RUN MODEL WITH OPTIMAL PARAMTERS ###################################################################
 ## Ageing upper bound, eats up higher age rates
   # Young ageing rate optim
-param_Baseline$u[c(1,2)]=rep(100,2)
+param_Baseline$u[c(1,2)]=rep(0.6,2)
 print(param_Baseline$u[c(1,2)])
 
 param_Baseline$s[2,] = param_Baseline$s[2,] * optimal_param
@@ -140,5 +140,31 @@ mo_baseline = mo_optimal
 ####################### CHECK PLOTTING OUTPUT ###################################################################
 source("output/Plots.R")
 
-########## NEW OBJECTIVE FN for Scalar for 6-12 months##########################################################################################################################################################
+########## NEW OBJECTIVE FN for 0-1 year olds##########################################################################################################################################################
+objective_function_deaths <- function(param_value, observed_deaths, model_function) {
+  # Update the model parameters
+  param_Baseline <- getModelInputs(scenario="Rubella")
+  param_Baseline$s[1:2,] <- rep(param_value, 2)  # Adjust death rates for first two age groups
+  
+  # Run the model with updated parameters
+  model_output <- model_function(param_Baseline, initialConditions, timesteps)
+  
+  # Extract death data for the first two age groups
+  model_deaths <- model_output$moPostprocessing[[1]] %>%
+    filter(variable == 'deaths_D', age_group %in% c("0-1m", "1-3m")) %>%
+    group_by(year) %>%
+    summarize(total_deaths = sum(value))
+  
+  # Calculate the sum of squared errors
+  sse <- sum((model_deaths$total_deaths - observed_deaths)^2)
+  
+  return(sse)
+}
+
+
+# put age off and see, if there's a bug 
+# turn disease off, and see
+
+
+
 
