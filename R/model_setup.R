@@ -57,8 +57,8 @@ cppFunction('
 N <- 63   # number of patches (age bands)
 #### Import Data ####
 
-startyear <- 2000 # starting year of simulation 2015-01-01
-endyear <- 2030
+startyear <- 1985 # starting year of simulation 2015-01-01
+endyear <- 2031
 tyears <- endyear - startyear # total years of simulation
 dtout <- 1/365 # output timestep
 timesteps <- startyear+seq(0, tyears, dtout) # time vector

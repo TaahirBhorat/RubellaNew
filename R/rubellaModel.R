@@ -14,11 +14,7 @@ modelFilename <- 'modelStructure/RubellaModel.xlsx'
 # To update shinyInputs: mt_updateShinyInputs
 # To update parameter sheet: mt_updateParameters(overwrite=T)
 
-# 18 Sept:
-### initial conditions redo
-### Transition tracking
-### re-update the transitions
-### 
+
 
 
 
@@ -87,7 +83,7 @@ disrates.D <- function(x, parameters, t) {
     #parameters
 
     infectious_D <- (I)/D.pop
-    lambda = 0#1*ptrans*as.vector(contact%*%infectious_D)
+    lambda = ptrans*as.vector(contact%*%infectious_D)
     
     
     
@@ -167,6 +163,8 @@ postproc.D  <- function(parameters, out, tran) {
                          imune_D,
                          all_Inc_D,
                          doses_1_D,
+                         doses_2_D,
+                         doses_all_D,
                          deaths_D)
                          #births_D,
                          #RecVac_D)
@@ -180,10 +178,13 @@ postproc.D  <- function(parameters, out, tran) {
   
     #Count the things
     #Grouping Transitions for use for counting 
-    allincTransitions <- tbTransitions_D %>% filter(To%in%c('I[n]')) %>% pull(id)
+    #browser()
+    allincTransitions <- tbTransitions_D %>% filter(To%in%c('E[n]')) %>% pull(id)
     imuneCompartments <- c('M',"V1p", "V2p",'R')
 
-    doses_1Transitions <- tbTransitions_D %>% filter(To=='V1p[nxt]') %>% pull(id)
+    doses_1Transitions <- tbTransitions_D %>% filter(To=='V1p[n]') %>% pull(id)
+    doses_2Transitions <- tbTransitions_D %>% filter(To=='V2p[n]') %>% pull(id)
+    doses_allTransitions <-  tbTransitions_D %>% filter(To%in%c('V2p[n]','V1p[n]','V2np[n]','V1np[n]')) %>% pull(id)
     
     death_transitions = tbTransitions_D %>% filter(To=='NullS[n]') %>% pull(id)
     
@@ -203,8 +204,10 @@ postproc.D  <- function(parameters, out, tran) {
       popa <- rowSums(out[,c(varind_D[c(alivepop_D),n])+1])  # Alive population
       postprocVarList$popa[, n]  <- popa
       postprocVarList$imune_D[, n] <- rowSums(out[, c(varind_D[imuneCompartments, n])+1])
-      postprocVarList$all_Inc_D[, n]  <- (tran[, unname(traind_D[allincTransitions, n])] / 365.25)# All Incidence
+      postprocVarList$all_Inc_D[, n]  <- rowSums(tran[, unname(traind_D[allincTransitions, n])] / 365.25)# All Incidence
       postprocVarList$doses_1_D[, n]  <- rowSums(tran[, traind_D[doses_1Transitions, n]] / 365.25)
+      postprocVarList$doses_2_D[, n]  <- rowSums(tran[, traind_D[doses_2Transitions, n]] / 365.25)
+      postprocVarList$doses_all_D[, n]  <- rowSums(tran[, traind_D[doses_allTransitions, n]] / 365.25)
       postprocVarList$deaths_D[, n]  <- rowSums(tran[, traind_D[death_transitions, n]] / 365.25)# deaths
       #postprocVarList$births_D[, n]  <- rowSums(tran[, traind_D[birth_transitions, n]] / 365.25)#births
       #postprocVarList$RecVac_D[, n]  <- (tran[, traind_D[RecVac_transitions, n]] / 365.25)# seropos

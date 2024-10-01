@@ -1,9 +1,16 @@
 # Packages needed
-# MAKE TABLE OF CONTENTS AND ORDER
+# Run till 2031
+# Vaccination later
+#In order 29 September:
+  # R0 calc, put it in as r0/ duration of infection and pr of transmission, get it to match function and then get the Ptrans
+  # Run to steady prior to vaccination
+  # Fertility * population women * (live birth rate)
+  # Introduce vaccination and run all tests
+
 library(ggplot2)
 library(dplyr)
 library(gridExtra)
-install.packages("languageserver")
+library(esquisse)
 
 #### Plots ####
 
@@ -510,5 +517,7 @@ for(i in 2:31){
   pop_temp[i] = pop_temp[i-1] +true_births_df$value[i] - true_deaths[i]
 }
 plot(pop_temp)
+
+
 
 

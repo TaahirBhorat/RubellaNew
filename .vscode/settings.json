@@ -1,0 +1,4 @@
+{
+    "r.plot.defaults.fullWindowMode": true,
+    "r.plot.useHttpgd": true
+}
