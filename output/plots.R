@@ -63,6 +63,9 @@ V1np_columns <- rubella_data[, seq(8, ncol(rubella_data), by=9)]
 V2p_columns <- rubella_data[, seq(9, ncol(rubella_data), by=9)]
 V2np_columns <- rubella_data[, seq(10, ncol(rubella_data), by=9)]
 
+# make the above a single data frame
+compartments = cbind(M_columns, S_columns, E_columns, I_columns, R_columns, V1p_columns, V1np_columns, V2p_columns, V2np_columns)
+
 
 # Sum all compartments across all ages for each time point
 total_M <- rowSums(M_columns)
@@ -223,7 +226,7 @@ age_groups <- c(
 #### Overall true vs Model Deaths######################################################################################################
 model_deaths = Deaths %>% filter(age_group =="All") %>% select(c(year, value))
 colnames(model_deaths) = c('year', 'model_deaths')
-true_deaths <- c(
+true_deaths <- c(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
   499120.6367, 529547.5881, 567709.074, 607862.7901, 642885.2066, 652493.6223, 643787.7158, 
   622303.1151, 598679.17, 576839.0826, 552450.1591, 528737.076, 515257.216, 506029.9541, 
   501666.2887, 503039.8281, 506530.0318, 511686.0082, 513934.7023, 515655.518, 517576.822, 
@@ -291,7 +294,7 @@ print(result)
 
 
 model_deaths_age = Deaths %>% filter(age_group !="All")
-model_deaths_age$fat_age = rep(mapped_age_groups,31)
+model_deaths_age$fat_age = rep(mapped_age_groups,47)
 summarized_data <- model_deaths_age %>%
   group_by(year, fat_age) %>%
   summarize(total_value = sum(value))

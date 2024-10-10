@@ -85,9 +85,26 @@ disrates.D <- function(x, parameters, t) {
     infectious_D <- (I)/D.pop
     lambda = ptrans*as.vector(contact%*%infectious_D)
     
+    # Fertility Births
+    age_indices_15_49 <- seq(from = 17, to = 51, by = 1)
+    
+    # Sum population across all compartments for the 15-49 age range
+    female_population <- sum(
+      M[age_indices_15_49],  # Maternal immunity
+      S[age_indices_15_49],  # Susceptible
+      E[age_indices_15_49],  # Exposed
+      I[age_indices_15_49],  # Infectious
+      R[age_indices_15_49],  # Recovered
+      V1p[age_indices_15_49],  # Vaccinated, protected dose 1
+      V1np[age_indices_15_49],  # Vaccinated, not protected dose 1
+      V2p[age_indices_15_49],  # Vaccinated, protected dose 2
+      V2np[age_indices_15_49]  # Vaccinated, not protected dose 2
+    )
+    
+    testb = fert_rate[[tic]]*(female_population*perc_fem[[tic]])
     
     
-    
+
 
     
     #### TO MAKE RATES CODE: #
@@ -100,10 +117,11 @@ disrates.D <- function(x, parameters, t) {
     
 # making births work across ages
     bi <- rep_along(S, 0)
-    bi[1] <- births[[tic]]
-    #if (tic =='2003'){
-     #browser()
-   #} 
+    #bi[1] <- births[[tic]]
+    bi[1] <- testb
+   #  if (tic > '1985.4'){
+   #   browser()
+   # } 
     tranrate <- array(c(
       (1-mprop)*bi,  # Births no-maternal-immunity
       mprop*bi,  # Births Maternal Immunity
@@ -120,7 +138,7 @@ disrates.D <- function(x, parameters, t) {
       (1-s[,tic])*v2[,tic]*u*e*S,  # Succeptible  protected vaccination dose 2
       (1-s[,tic])*v2[,tic]*u*(1-e)*S,  # Succeptible not-protected vaccination dose 2
       s[,tic]*u*E,  # natural death
-      alpha*I,  # become infectious
+      alpha*E,  # become infectious
       (1-s[,tic])*u*E,  # ageing, no vaccination from Exposed
       gamm*I,  # natural recovery
       s[,tic]*u*I,  # natural death
@@ -165,8 +183,8 @@ postproc.D  <- function(parameters, out, tran) {
                          doses_1_D,
                          doses_2_D,
                          doses_all_D,
-                         deaths_D)
-                         #births_D,
+                         deaths_D,
+                         births_D)
                          #RecVac_D)
     
     postprocVarNames <- postprocVars %>% sapply(rlang::as_name)
@@ -188,7 +206,7 @@ postproc.D  <- function(parameters, out, tran) {
     
     death_transitions = tbTransitions_D %>% filter(To=='NullS[n]') %>% pull(id)
     
-    #birth_transitions <- c(1,2)
+    birth_transitions <- c(1,2)
     
     #RecVac_transitions = c(12)
 
@@ -209,7 +227,7 @@ postproc.D  <- function(parameters, out, tran) {
       postprocVarList$doses_2_D[, n]  <- rowSums(tran[, traind_D[doses_2Transitions, n]] / 365.25)
       postprocVarList$doses_all_D[, n]  <- rowSums(tran[, traind_D[doses_allTransitions, n]] / 365.25)
       postprocVarList$deaths_D[, n]  <- rowSums(tran[, traind_D[death_transitions, n]] / 365.25)# deaths
-      #postprocVarList$births_D[, n]  <- rowSums(tran[, traind_D[birth_transitions, n]] / 365.25)#births
+      postprocVarList$births_D[, n]  <- rowSums(tran[, traind_D[birth_transitions, n]] / 365.25)#births
       #postprocVarList$RecVac_D[, n]  <- (tran[, traind_D[RecVac_transitions, n]] / 365.25)# seropos
     }
     # Ignore from here down

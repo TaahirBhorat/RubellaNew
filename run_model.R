@@ -88,19 +88,5 @@ plot_compartments <- function(mo_baseline) {
 
 plot_compartments(mo_baseline)
 
-
-
-
-
-
-
-
-
-
-
-
-# print the value where variable is pop_D
-max(mo_baseline$moPostprocessing[[1]]$value[mo_baseline$moPostprocessing[[1]]$variable == "pop_D"])
-
 # plot the value of pop_D over time as a line plot
 plot(mo_baseline$moPostprocessing[[1]]$value[mo_baseline$moPostprocessing[[1]]$variable == "pop_D"], type = "l")
