@@ -117,8 +117,8 @@ disrates.D <- function(x, parameters, t) {
     
 # making births work across ages
     bi <- rep_along(S, 0)
-    #bi[1] <- births[[tic]]
-    bi[1] <- testb
+    bi[1] <- births[[tic]]
+    #bi[1] <- testb
    #  if (tic > '1985.4'){
    #   browser()
    # } 

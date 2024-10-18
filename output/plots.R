@@ -18,9 +18,72 @@ library(esquisse)
 mop = mo_baseline$moPostprocessing[[1]] |>
   mutate(age_group=as_factor(age_group))
 
+
+
 ############# Esquisser for looking at processed data and variables ###########################################
 #mop%>%esquisse::esquisser()
 
+###### AGE COMPARTMENT PLOT ##############################
+plot_rubella_compartment <- function(data, compartment) {
+  
+  # List of age groups 
+  age_groups <- c(
+    "0-6 months", "6-12 months", "1-2 years", "2-3 years", "3-4 years", 
+    "4-5 years", "5-6 years", "6-7 years", "7-8 years", "8-9 years", 
+    "9-10 years", "10-11 years", "11-12 years", "12-13 years", "13-14 years", 
+    "14-15 years", "15-16 years", "16-17 years", "17-18 years", "18-19 years", 
+    "19-20 years", "20-21 years", "21-22 years", "22-23 years", "23-24 years", 
+    "24-25 years", "25-26 years", "26-27 years", "27-28 years", "28-29 years", 
+    "29-30 years", "30-31 years", "31-32 years", "32-33 years", "33-34 years", 
+    "34-35 years", "35-36 years", "36-37 years", "37-38 years", "38-39 years", 
+    "39-40 years", "40-41 years", "41-42 years", "42-43 years", "43-44 years", 
+    "44-45 years", "45-46 years", "46-47 years", "47-48 years", "48-49 years", 
+    "49-50 years", "50-51 years", "51-52 years", "52-53 years", "53-54 years", 
+    "54-55 years", "55-56 years", "56-57 years", "57-58 years", "58-59 years", 
+    "59-60 years", "60-70 years", "70+ years"
+  )
+  
+  # Determine which compartment to plot 
+  compartment_index <- switch(compartment,
+                              "M" = 2,
+                              "S" = 3,
+                              "E" = 4,
+                              "I" = 5,
+                              "R" = 6,
+                              "V1p" = 7,
+                              "V1np" = 8,
+                              "V2p" = 9,
+                              "V2np" = 10,
+                              stop("Invalid compartment specified"))
+  
+  # Select the compartment columns 
+  df_selected <- data %>%
+    select(time_column = 1, seq(compartment_index, ncol(data), by=9))
+  
+  # Assign age group names to columns
+  colnames(df_selected)[-1] <- age_groups
+  
+  # Reshape 
+  df_long <- df_selected %>%
+    pivot_longer(cols = -time_column, names_to = "age_group", values_to = compartment)
+  
+  # Store the long df in a variable
+  assign(paste0("df_long_", compartment), df_long, envir = .GlobalEnv)
+  
+  # Plot the selected compartment
+  plot <- ggplot(df_long, aes(x = time_column, y = !!sym(compartment), color = age_group)) +
+    geom_line() +
+    labs(x = "Time", y = compartment, title = paste(compartment, "Compartment over Time by Age Group")) +
+    theme_minimal()
+  
+  # Return both the plot and the long df
+  return(list(plot = plot, long_data = df_long))
+}
+result <- plot_rubella_compartment(rubella_data, "I") 
+print(result$plot)
+df_long_I <- result$long_data
+
+df_long_I%>%esquisse::esquisser()
 ############  Death Compartments Plots (age stratified)#####################################################################
 mop%>%
   filter(variable %in% "deaths_D") %>%

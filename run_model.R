@@ -2,7 +2,9 @@ source(here::here("R/utils.R"))
 LOG <- makeLogger()
 source(here::here("R/model_setup.R"))
 source(here::here("R/rubellaModel.R"))
-
+# R0 from R script
+  #Initial Values functionalise
+    #Data free model: age strucutre, scaled death and birth rate(can fix over time)
 
 #### Run the model ####
 setLogLevel(LEVEL$TRACE)
@@ -55,7 +57,7 @@ plot_compartment <- function(data, title) {
     geom_line() +
     geom_point() +
     labs(title = title, x = "Time", y = "Count") +
-    theme_minimal()
+    theme_minimal()+ylim(0,NA)
 }
 
 # Function to plot all compartments
