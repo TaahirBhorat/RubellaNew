@@ -102,7 +102,7 @@ first_col_s <- param_Baseline$s[, 1, drop = FALSE]
 first_col_v1 <- param_Baseline$v1[, 1, drop = FALSE]
 first_col_v2 <- param_Baseline$v2[, 1, drop = FALSE]
 
-# Create new matrices by repeating the first column for the new years
+# Create new matrices
 new_s <- matrix(rep(first_col_s, length(years_to_add)), 
                 nrow = nrow(param_Baseline$s), 
                 ncol = length(years_to_add))
@@ -165,9 +165,7 @@ print(dim(param_Baseline$v1))
 ###### RUN #############
 
 startyear = 1950
-# R0 from R script
-#Initial Values functionalise
-#Data free model: age strucutre, scaled death and birth rate(can fix over time)
+
 
 #### Run the model ####
 setLogLevel(LEVEL$TRACE)
